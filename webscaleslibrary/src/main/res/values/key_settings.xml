@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="KEY_ADDRESS">com.konst.scaleslibrary.KEY_ADDRESS</string>
+    <string name="KEY_WIFI_KEY">com.konst.scaleslibrary.KEY_WIFI_KEY</string>
+    <string name="KEY_WIFI_SSID">com.konst.scaleslibrary.KEY_WIFI_SSID</string>
+    <string name="KEY_PORT">com.konst.scaleslibrary.KEY_PORT</string>
+    <string name="KEY_DISCRETE">com.konst.scaleslibrary.KEY_DISCRETE</string>
+    <string name="KEY_SWITCH_ZERO">com.konst.scaleslibrary.KEY_SWITCH_ZERO</string>
+    <string name="KEY_SWITCH_STABLE">com.konst.scaleslibrary.KEY_SWITCH_STABLE</string>
+    <string name="KEY_TIMER_ZERO">com.konst.scaleslibrary.KEY_TIMER_ZERO</string>
+    <string name="KEY_MAX_ZERO">com.konst.scaleslibrary.KEY_MAX_ZERO</string>
+    <string name="KEY_DELTA_STAB">com.konst.scaleslibrary.KEY_DELTA_STAB</string>
+    <string name="KEY_TIMER">com.konst.scaleslibrary.KEY_TIMER</string>
+    <string name="KEY_STABLE">com.konst.scaleslibrary.KEY_STABLE</string>
+    <string name="KEY_SERVICE_COD">com.konst.scaleslibrary.KEY_SERVICE_COD</string>
+    <string name="KEY_FILTER">com.konst.scaleslibrary.KEY_FILTER</string>
+    <string name="KEY_ADMIN">com.konst.scaleslibrary.KEY_ADMIN</string>
+    <string name="KEY_CLOSED">com.konst.scaleslibrary.KEY_CLOSED</string>
+    <string name="KEY_SEAL">com.konst.scaleslibrary.KEY_SEAL</string>
+    <string name="KEY_POINT1">com.konst.scaleslibrary.KEY_POINT1</string>
+    <string name="KEY_POINT2">com.konst.scaleslibrary.KEY_POINT2</string>
+    <string name="KEY_WEIGHT_MAX">com.konst.scaleslibrary.KEY_WEIGHT_MAX</string>
+    <string name="KEY_SAVE_MAN">com.konst.scaleslibrary.KEY_SAVE_MAN</string>
+    <string name="KEY_NET">com.konst.KEY_NET</string>
+    <string name="KEY_SSID">com.kostya.module.KEY_SSID</string>
+    <string name="KEY_HOST">com.kostya.module.KEY_HOST</string>
+    <string name="KEY_IP">com.konst.KEY_IP</string>
+    <string name="KEY_MASK">com.konst.KEY_MASK</string>
+    <string name="KEY_GATEWAY">com.konst.KEY_GATEWAY</string>
+    <string name="KEY_STATIC_IP">com.konst.KEY_STATIC_IP</string>
+</resources>

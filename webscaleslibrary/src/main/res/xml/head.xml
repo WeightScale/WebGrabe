@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:id="@+id/settingsNet"
+        android:icon="@drawable/ic_settings_net"
+        android:summary="Настройки сети"
+        android:title="Настройки">
+    </header><!--android:fragment="com.konst.scaleslibrary.settings.ActivitySettings$FragmentSettingsNet"-->
+    <header android:id="@+id/settingsGeneral"
+        android:icon="@drawable/ic_settings_general"
+        android:summary="Настройки для опытного пользователя. Требуется пароль."
+        android:title="Настройки общии">
+    </header>
+    <header android:id="@+id/calibrator"
+        android:icon="@drawable/ic_build_calibrator"
+        android:summary="Калибровка для опытного пользователя. Требуется пароль."
+        android:title="Калибровка">
+    </header>
+    <header
+        android:icon="@drawable/ic_help"
+        android:summary="Справка"
+        android:title="Справка">
+    </header>
+    <header android:icon="@drawable/ic_back"
+        android:id="@+id/closedHeader"
+        android:title="Закрыть Окно">
+
+    </header>
+</preference-headers>

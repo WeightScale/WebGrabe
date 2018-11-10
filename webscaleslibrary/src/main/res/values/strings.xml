@@ -1,0 +1,77 @@
+<resources>
+    <string name="app_name">ScalesLibrary</string>
+    <string name="find_device">Найденые устройства</string>
+    <string name="search_message">Сообщения</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="Connecting">Соеденяемся</string>
+    <string name="Zeroing">Обнуление…</string>
+    <string name="bluetooth_off">bluetooth выключен</string>
+    <string name="bluetooth_turning_on">bluetooth включается</string>
+    <string name="bluetooth_on">bluetooth включен</string>
+    <string name="scales_kg">кг</string>
+    <string name="discovery_started">Поиск…</string>
+    <string name="device_found">Найдено устройство</string>
+    <string name="Settings">Настройки</string>
+    <string name="Set_values">Установки значений</string>
+
+    <string name="setting_auto_zero">Настройки авто ноль</string>
+    <string name="sum_setting_auto_zero">Настройки авто ноль время, вес …</string>
+    <string name="Auto_zero">Авто ноль</string>
+    <string name="sum_auto_zero">Настройки определения сброса на ноль</string>
+    <string name="Time">Время</string>
+    <string name="sum_time_auto_zero">Время после которого весы автоматически обнуляются, максимальное значение</string>
+    <string name="weight">Вес</string>
+    <string name="sum_weight">Предел авто ноля</string>
+    <string name="Timer_off">Время бездействия:</string>
+    <string name="measuring_step">Шаг взвешивания:</string>
+    <string name="auto_capture">АВТОЗАХВАТ:</string>
+    <string name="filter_adc">Фильтр АЦП:</string>
+    <string name="sum_filter_adc">Чем больше число тем точнее, но медленей измерения.</string>
+    <string name="zeroing">Установить Ноль</string>
+    <string name="about">О программе</string>
+    <string name="OK">OK</string>
+    <string name="Close">Close</string>
+    <string name="Update_scale">Обновление весов</string>
+    <string name="KEY_UPDATE">key_update</string>
+    <string name="second">секунд</string>
+    <string name="error">Ошибка</string>
+    <string name="preferences_yes">Установлено</string>
+    <string name="sum_max_null">Вес считается ошибкой ноля, максимальное значение</string>
+    <string name="minute">минут</string>
+    <string name="sum_timer">Выключение весов при баздействии</string>
+    <string name="range">"диапазон от "</string>
+    <string name="to">" до "</string>
+    <string name="The_range_is_from_1_to">"Диапазон от 1 до "</string>
+    <string name="Range_between">"Диапазон между "</string>
+    <string name="and">" и "</string>
+    <string name="The_range_is_from_0_to">"Диапазон от 0 до "</string>
+    <string name="Max_weight">"Максимальный вес: "</string>
+    <string name="error_code">Неверный Код</string>
+    <string name="ConstantA">Константа А:</string>
+    <string name="NO">НЕТ</string>
+    <string name="Battery">"Батарея: "</string>
+    <string name="Is_new_version">Есть новая версия микропрограммы</string>
+    <string name="Scale_update">"Весы обновлены до последней версии "</string>
+    <string name="start_load">Начать загрузку</string>
+    <string name="Not_programmer">Не программатор</string>
+    <string name="Programmer_defined">Программатор определен</string>
+    <string name="Warning_Loading_settings">Внимание! Загрузка настроек</string>
+    <string name="Warning_Error">Внимание! Ошибка</string>
+    <string name="TEXT_MESSAGE">Выключите весы. На весах нажмите кнопку включения и не отпускайте пока индикатор не
+        погаснет. После этого нажмите ОК
+    </string>
+    <string name="TEXT_MESSAGE1">На весах нажмине кнопку и отпустите ждите пока индикатор равномерно начнет мигать.
+        После этого нажмите ОК
+    </string>
+    <string name="TEXT_MESSAGE2">Произошла ошибка программирования смотрите текст лога</string>
+    <string name="TEXT_MESSAGE3">"Ищем фаил HEX для этого устройства "</string>
+    <string name="TEXT_MESSAGE5">На весах нажмите кнопку и отпустите индикатор прекратит мигать. После этого нажмитеОК
+    </string>
+    <string name="TEXT_MESSAGES13">Ограничения, лимиты, прочее</string>
+    <string name="TEXT_MESSAGE14">Обновление весов до последней версии</string>
+    <string name="Warning_update">Внимание! Обновление</string>
+    <string name="Warning_Connect">Внимание! Соединение</string>
+
+</resources>

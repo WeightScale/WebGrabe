@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Настройки Сети">
+        <CheckBoxPreference android:key="@string/KEY_STATIC_IP"
+            android:title="СТАТИЧЕСКИЙ IP:"
+            android:summary="IP динамический, присваевает роутер."
+            android:defaultValue="true"/>
+        <EditTextPreference android:key="@string/KEY_IP"
+            android:title="IP:"
+            android:inputType="number"
+            android:digits="0123456789."
+            android:maxLength="15"
+            android:dependency="@string/KEY_STATIC_IP"/>
+        <EditTextPreference android:key="@string/KEY_MASK"
+            android:title="MASK:"
+            android:inputType="number"
+            android:digits="0123456789."
+            android:maxLength="15"
+            android:dependency="@string/KEY_STATIC_IP"/>
+        <EditTextPreference android:key="@string/KEY_GATEWAY"
+            android:title="GATEWAY:"
+            android:inputType="number"
+            android:digits="0123456789."
+            android:maxLength="15"
+            android:dependency="@string/KEY_STATIC_IP"/>
+        <com.kostya.webscaleslibrary.preferences.ListPreferenceWifi
+            android:summary="Сеть подключения по умолчанию. При открытии приложение беднт соединятся с указаной сетью."
+            android:title="СЕТЬ:" android:key="@string/KEY_SSID"/>
+        <EditTextPreference
+            android:gravity="center"
+            android:key="@string/KEY_HOST"
+            android:title="HOST:"
+            android:summary="IP адресс или имя хост для соединения."/>
+    </PreferenceCategory>
+</PreferenceScreen>
