@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 
+import com.kostya.webscaleslibrary.FragmentWebTerminal;
 import com.kostya.webscaleslibrary.preferences.ActivityCalibration;
 
 import java.util.ArrayList;
@@ -22,7 +24,6 @@ public class BackgroundManager implements Application.ActivityLifecycleCallbacks
     public interface Listener {
         void onBecameForeground();
         void onBecameBackground();
-        void onBecameDestroy();
     }
 
     private boolean mInBackground = true;
@@ -124,15 +125,7 @@ public class BackgroundManager implements Application.ActivityLifecycleCallbacks
     public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
-        /*if(activity instanceof MainActivity){
-            for (Listener listener : listeners) {
-                try {
-                    listener.onBecameDestroy();
-                } catch (Exception e) {
-                    Log.e(LOG, "Listener threw exception!" + e);
-                }
-            }
-        }*/
-    }
+    public void onActivityDestroyed(Activity activity) {}
+
+
 }

@@ -150,8 +150,8 @@ public class Client{
 
     }
 
-    static class MessageEventSocket{
-        enum Message{
+    public static class MessageEventSocket{
+        public enum Message{
             CONNECTING("Пробуем Соединится"),
             CONNECT("Есть соединение"),
             DISCONNECT("Нет соединения"),
@@ -166,8 +166,8 @@ public class Client{
             public String toString() {return message;}
         }
 
-        final Message message;
-        final String text;
+        public final Message message;
+        public final String text;
 
         MessageEventSocket(Message message, String text){
             this.message = message;

@@ -13,6 +13,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -24,15 +25,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 
+import com.kostya.webscaleslibrary.module.Client;
 import com.kostya.webscaleslibrary.module.Commands;
 import com.kostya.webscaleslibrary.module.InterfaceModule;
+import com.kostya.webscaleslibrary.module.Module;
 import com.kostya.webscaleslibrary.module.ObjectScales;
+import com.kostya.webscaleslibrary.module.WebScalesClient;
 import com.kostya.webscaleslibrary.preferences.ActivityProperties;
 import com.kostya.webscaleslibrary.preferences.Settings;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.text.DecimalFormat;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -46,6 +52,8 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     static Context mContext;
     /** Настройки для весов. */
     public Settings settings;
+    WebScalesClient webScalesClient;
+    private final Handler handler = new Handler();
     //private Module scaleModuleWiFi;
     //private ModuleWiFi scaleModule;
     private SpannableStringBuilder textKg;
@@ -102,6 +110,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         baseReceiver = new BaseReceiver(getActivity());
         baseReceiver.register();
 
+        //setupWeightView();
         createScalesModule(ssid);
     }
 
@@ -118,6 +127,8 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
 
         textViewBattery = view.findViewById(R.id.textBattery);
         textViewTemperature = view.findViewById(R.id.textTemperature);
+
+        setupWeightView();
 
         return view;
     }
@@ -136,6 +147,9 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     public void onResume() {
         super.onResume();
         EventBus.getDefault().register(this);
+        if (webScalesClient.isConnected()){
+            startCheckGetWeight();
+        }
         //try {scaleModule.scalesProcessEnable(true);}catch (Exception e){}
 
     }
@@ -144,6 +158,8 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     public void onPause() {
         super.onPause();
         EventBus.getDefault().unregister(this);
+        stopCheckGetWeight();
+        weightTextView.setText(String.valueOf("--"));
         //try {scaleModule.scalesProcessEnable(false);}catch (Exception e){}
     }
 
@@ -153,6 +169,10 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         baseReceiver.unregister();
         if (scaleModule != null)
             scaleModule.dettach();*/
+        if (webScalesClient != null){
+            webScalesClient.destroy();
+            webScalesClient = null;
+        }
         super.onDetach();
     }
 
@@ -190,6 +210,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     }
 
     private void createScalesModule(String ssid){
+        webScalesClient = new WebScalesClient(getActivity().getApplicationContext());
         try {
             /*ModuleWiFi.create(getActivity(), version, ssid, new InterfaceCallbackScales() {
                 *//** Сообщение о результате соединения.
@@ -231,9 +252,9 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         /*if (scaleModule != null){
            progressBarWeight.setMax(scaleModule.getMarginTenzo());
             progressBarWeight.setSecondaryProgress(scaleModule.getLimitTenzo());
-            progressBarStable.setMax(Module.STABLE_NUM_MAX);
-        }*/
 
+        }*/
+        progressBarStable.setMax(Module.STABLE_NUM_MAX);
         progressBarStable.setProgress(0);
 
         dProgressWeight = getResources().getDrawable(R.drawable.progress_weight);
@@ -330,6 +351,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
 
         @Override
         public void run() {
+            Commands.TP.getParam();
             //scaleModule.setOffsetScale();
             if (dialog.isShowing()) {
                 dialog.dismiss();
@@ -475,11 +497,53 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         }
     }
 
+    private void startCheckGetWeight() {
+        handler.postDelayed(checkGetWeightRunable, 5000);
+    }
+
+    private void stopCheckGetWeight() {
+        handler.removeCallbacks(checkGetWeightRunable);
+    }
+
+    private final Runnable checkGetWeightRunable = new Runnable() {
+        @Override
+        public void run() {
+            weightTextView.setText(String.valueOf("--"));
+            Commands.WT.getParam();
+            //handler.postDelayed(checkGetWeightRunable, 5000);
+            startCheckGetWeight();
+        }
+    };
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventSocket(Client.MessageEventSocket eventSocket){
+        weightTextView.setText(String.valueOf(eventSocket.text));
+        if(eventSocket.message == Client.MessageEventSocket.Message.CONNECT){
+            Commands.WT.getParam();
+            //handler.postAtTime(checkGetWeightRunable, 5000);
+            startCheckGetWeight();
+        }
+        //Log.i("Event", eventSocket.text);
+    }
+
+    private static String setPrecision(double amt, int precision){
+        return String.format("%." + precision + "f", amt);
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(Commands.ClassWT event){
-        moduleWeight = event.weight;
-        final String textWeight = String.valueOf(moduleWeight);
+        stopCheckGetWeight();
+        //handler.removeCallbacks(checkGetWeightRunable);
+        //moduleWeight = event.weight;
+        //final String textWeight = setPrecision(moduleWeight, 3);
         /* Обновляем прогресс стабилизации веса. */
-        progressBarStable.setProgress(10);                          //todo
+        progressBarStable.setProgress(Module.STABLE_NUM_MAX - event.stable);                          //todo
+        weightTextView.setText(event.weight);
+        try {Thread.sleep(10);} catch (InterruptedException e) {}
+        Commands.WT.getParam();
+        startCheckGetWeight();
+        //handler.postDelayed(checkGetWeightRunable, 5000);
     }
+
+
 }

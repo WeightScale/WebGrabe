@@ -10,6 +10,8 @@ public abstract class Module implements WifiBaseManager.OnWifiBaseManagerListene
     protected Settings settings;
     public static String SSID;
     public static String HOST;
+    /** Количество стабильных показаний веса для авто сохранения. */
+    public static final int STABLE_NUM_MAX = 10;
     public static final String SETTINGS = Module.class.getName() + ".SETTINGS"; //
 
     public Module(Context context) {

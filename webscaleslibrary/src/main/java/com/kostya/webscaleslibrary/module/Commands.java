@@ -21,25 +21,24 @@ public abstract class Commands {
     OkHttpClient client;
     final Gson gson = new Gson();
     InetAddress hostAddress;
-    static final ClassWT WT = new ClassWT();
+    public static final ClassWT WT = new ClassWT();
     static ClassSWT SWT;
-    static ClassTP TP = new ClassTP();
+    public static ClassTP TP = new ClassTP();
     abstract void getParam();
 
     /** Класс команды получить данные вес заряд стабильный вес */
     public static class ClassWT extends Commands{
         @SerializedName("cmd")
-        String command;
+        public String command;
         @SerializedName("w")
-        public
-        double weight;
+        public String weight;
         @SerializedName("c")
-        int charge;
+        public int charge;
         @SerializedName("s")
-        boolean stable;
+        public int stable;
 
         @Override
-        void getParam(){
+        public void getParam(){
             ObjectCommand obj = interfaceModule.sendCommand("wt");
         }
     }
@@ -55,12 +54,12 @@ public abstract class Commands {
     }
 
     /** Класс комманда сбросить в ноль */
-    static class ClassTP extends  Commands{
+    public static class ClassTP extends  Commands{
         @SerializedName("cmd")
         String command;
 
         @Override
-        void getParam(){
+        public void getParam(){
             ObjectCommand obj = interfaceModule.sendCommand("tp");
         }
     }

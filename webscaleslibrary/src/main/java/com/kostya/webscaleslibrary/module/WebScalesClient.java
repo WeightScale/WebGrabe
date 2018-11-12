@@ -23,7 +23,7 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
     private static final String TAG = "WebScalesClient";
 
 
-    WebScalesClient(Context context) {
+    public WebScalesClient(Context context) {
         super(context);
         Commands.setInterfaceCommand(this);
         socketConnectionHandler = new Handler();
@@ -38,7 +38,7 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
         socketConnectionHandler.removeCallbacks(checkConnectionRunnable);
     }
 
-    private boolean isConnected() {
+    public boolean isConnected() {
         return clientWebSocket != null &&
                 clientWebSocket.getConnection() != null &&
                 clientWebSocket.getConnection().isOpen();
@@ -88,15 +88,6 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
             closeConnection();
         }
 
-        @Override
-        public void onBecameDestroy() {
-            if(isConnected()){
-                closeConnection();
-            }
-            wifiBaseManager.terminate();
-            System.runFinalizersOnExit(true);
-            System.exit(0);
-        }
     };
 
     @Override
@@ -109,7 +100,8 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
                         EventBus.getDefault().post(gson.fromJson(message,Commands.ClassSWT.class));
                         break;
                     case "wt":
-                        EventBus.getDefault().post(gson.fromJson(message, Commands.ClassWT.class));
+                        Commands.ClassWT wt = gson.fromJson(message, Commands.ClassWT.class);
+                        EventBus.getDefault().post(wt);
                         break;
                 }
             }
@@ -141,5 +133,14 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
     @Override
     public void onWiFiDisconnect() {
         BackgroundManager.get((Application) mContext).unregisterListener(appActivityListener);
+        closeConnection();
+    }
+
+    public void destroy(){
+        closeConnection();
+        if (wifiBaseManager != null){
+            wifiBaseManager.terminate();
+            wifiBaseManager = null;
+        }
     }
 }

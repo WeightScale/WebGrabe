@@ -160,7 +160,7 @@ public class ScalesView extends LinearLayout implements OnInteractionListener/*,
             default:
                 //throw new Exception("Неизвестный модуль");
         }*/
-        fragment = FragmentWebTerminal.newInstance(version, settings.read(R.string.KEY_WIFI_SSID, ""), this);
+        fragment = FragmentWebTerminal.newInstance(version, settings.read(R.string.KEY_SSID, "KONST"), this);
         fragmentManager.beginTransaction().replace(R.id.fragment, fragment, fragment.getClass().getName()).commit();
     }
 
