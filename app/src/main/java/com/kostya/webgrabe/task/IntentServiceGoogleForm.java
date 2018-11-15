@@ -17,11 +17,15 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.kostya.webgrabe.Globals;
+import com.kostya.webgrabe.Main;
 import com.kostya.webgrabe.R;
 import com.kostya.webgrabe.internet.Internet;
-import com.kostya.webgrabe.provider.InvoiceTable;
+import com.kostya.webgrabe.provider.DaoSession;
+import com.kostya.webgrabe.provider.Invoice;
+import com.kostya.webgrabe.provider.InvoiceDao;
 import com.kostya.webgrabe.settings.ActivityPreferences;
 
+import org.greenrobot.greendao.query.QueryBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -33,10 +37,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -170,9 +176,48 @@ public class IntentServiceGoogleForm extends IntentService {
         InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(Uri.fromFile(file));
         //InputStream inputStream = new FileInputStream(path);
         GoogleForms.Form form = new GoogleForms(inputStream).createForm(nameForm);
-        Cursor invoice = new InvoiceTable(getApplicationContext()).getPreliminary(new Date());
-        if (invoice.getCount() > 0) {
-            invoice.moveToFirst();
+        //Cursor invoice = new InvoiceTable(getApplicationContext()).getPreliminary(new Date());
+        DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+        String d = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date());
+        QueryBuilder<Invoice> queryBuilder = daoSession.getInvoiceDao().queryBuilder();
+        queryBuilder.where(InvoiceDao.Properties.IsCloud.eq(false), InvoiceDao.Properties.IsReady.eq(true));
+        queryBuilder.whereOr(InvoiceDao.Properties.DateCreate.notEq(d),null);
+        List<Invoice> invoices = queryBuilder.list();
+        if (invoices.size() > 0) {
+            for (Invoice invoice : invoices){
+                double weight = invoice.getTotalWeight();
+                if (weight == 0){
+                    continue;
+                }
+                String http = form.getHttp();
+
+                Collection<BasicNameValuePair> values = form.getEntrys();
+                List<ValuePair> results = new ArrayList<>();
+
+                for (BasicNameValuePair valuePair : values){
+                    try {
+                        if(valuePair.getValue().equals(InvoiceDao.Properties.IsReady.columnName)){
+                            boolean i = invoice.getIsReady();
+                            if (i){
+                                results.add(new ValuePair(valuePair.getName(), ""));
+                            }else {
+                                results.add(new ValuePair(valuePair.getName(), "НЕ ЗАКРЫТА"));
+                            }
+                        }else
+                            //results.add(new ValuePair(valuePair.getName(), invoice.getString(invoice.getColumnIndex(valuePair.getValue()))));
+                            results.add(new ValuePair(valuePair.getName(), valuePair.getValue()));
+                    } catch (Exception e) {}
+                }
+                try {
+                    submitData(http, results);
+                    invoice.setIsCloud(true);
+                    invoice.update();
+                }catch (Exception e){
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+
+           /* invoice.moveToFirst();
             if (!invoice.isAfterLast()) {
                 do {
                     int weight = invoice.getInt(invoice.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
@@ -206,10 +251,9 @@ public class IntentServiceGoogleForm extends IntentService {
                     }
 
                 } while (invoice.moveToNext());
-            }
+            }*/
         }
-        invoice.close();
-
+        //invoice.close();
     }
 
     private void submitData(String http_post, List<ValuePair> results) throws Exception {

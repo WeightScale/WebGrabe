@@ -24,7 +24,7 @@
             android:maxLength="15"
             android:dependency="@string/KEY_STATIC_IP"/>
         <com.kostya.webscaleslibrary.preferences.ListPreferenceWifi
-            android:summary="Сеть подключения по умолчанию. При открытии приложение беднт соединятся с указаной сетью."
+            android:summary="Сеть подключения по умолчанию. При открытии приложение соединятся с указаной сетью."
             android:title="СЕТЬ:" android:key="@string/KEY_SSID"/>
         <EditTextPreference
             android:gravity="center"
@@ -32,4 +32,5 @@
             android:title="HOST:"
             android:summary="IP адресс или имя хост для соединения."/>
     </PreferenceCategory>
+    <PreferenceScreen android:key="@string/KEY_CLOSED" android:title="Закрыть окно" android:icon="@drawable/ic_back"/>
 </PreferenceScreen>

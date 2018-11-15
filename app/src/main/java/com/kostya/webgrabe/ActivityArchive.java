@@ -15,15 +15,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.kostya.webgrabe.provider.InvoiceTable;
+import com.kostya.webgrabe.provider.DaoSession;
+import com.kostya.webgrabe.provider.Invoice;
+import com.kostya.webgrabe.provider.InvoiceDao;
+
+import org.greenrobot.greendao.query.Query;
+import org.greenrobot.greendao.query.WhereCondition;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class ActivityArchive extends AppCompatActivity {
     //private SectionsPagerAdapter mSectionsPagerAdapter;
     private CursorFragmentPagerAdapter cursorFragmentPagerAdapter;
-    private InvoiceTable invoiceTable;
+    //private InvoiceTable invoiceTable;
     private ViewPager mViewPager;
 
     @Override
@@ -33,11 +39,21 @@ public class ActivityArchive extends AppCompatActivity {
 
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
-        invoiceTable = new InvoiceTable(this);
-        Cursor cursor = invoiceTable.getAllGroupDate();
+
+
+        DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+        Cursor cursor = daoSession.getDatabase()
+                .rawQuery("SELECT "
+                        + InvoiceDao.Properties.Id.columnName
+                        +", "+InvoiceDao.Properties.DateCreate.columnName
+                        +", sum(" + InvoiceDao.Properties.TotalWeight.columnName + ") AS \""+InvoiceDao.Properties.TotalWeight.columnName+"\" FROM " + InvoiceDao.TABLENAME+" where "
+                        + InvoiceDao.Properties.DateCreate.columnName+" IS NOT NULL GROUP BY "+InvoiceDao.Properties.DateCreate.columnName, new String []{});
+        //invoiceTable = new InvoiceTable(this);
+        //Cursor cursor = invoiceTable.getAllGroupDate();
         if (cursor == null) {
             return;
         }
+        cursor.moveToFirst();
         if (cursor.getCount() == 0){
             findViewById(R.id.archive_empty).setVisibility(View.VISIBLE);
             return;
@@ -46,8 +62,11 @@ public class ActivityArchive extends AppCompatActivity {
         cursorFragmentPagerAdapter = new CursorFragmentPagerAdapter(this, getSupportFragmentManager(), cursor) {
             @Override
             public Fragment getItem(Context context, Cursor cursor) {
-                String d = cursor.getString(cursor.getColumnIndex(InvoiceTable.KEY_DATE_CREATE));
-                int w = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
+                //String d = cursor.getString(cursor.getColumnIndex(InvoiceTable.KEY_DATE_CREATE));
+                String d = cursor.getString(cursor.getColumnIndex(InvoiceDao.Properties.DateCreate.columnName));
+                //int w = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
+                //double w = cursor.getDouble(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
+                double w = cursor.getDouble(cursor.getColumnIndex(InvoiceDao.Properties.TotalWeight.columnName));
                 return com.kostya.webgrabe.FragmentListArchiveInvoice.newInstance(d, String.valueOf(w));
             }
         };

@@ -79,7 +79,8 @@ public class Client{
     }
 
     public void close() {
-        ws.disconnect();
+        if (ws != null)
+            ws.disconnect();
     }
 
     void send(String data) {
@@ -142,20 +143,20 @@ public class Client{
             //websocket.sendPing("Are you there?");
         }
 
-        @Override
+       /* @Override
         public void onStateChanged(WebSocket websocket, WebSocketState newState) throws Exception {
             super.onStateChanged(websocket, newState);
             EventBus.getDefault().post(new MessageEventSocket(MessageEventSocket.Message.STATE, newState.name()));
-        }
+        }*/
 
     }
 
     public static class MessageEventSocket{
         public enum Message{
-            CONNECTING("Пробуем Соединится"),
-            CONNECT("Есть соединение"),
+            CONNECTING("Соединяемся"),
+            CONNECT("Соединились"),
             DISCONNECT("Нет соединения"),
-            ERROR("Ошибка соединения"),
+            ERROR("Ошибка"),
             STATE(""),
             UNEXPECTED("");
             String message;

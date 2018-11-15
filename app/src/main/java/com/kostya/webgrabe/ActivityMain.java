@@ -32,8 +32,11 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kostya.webgrabe.internet.Internet;
-import com.kostya.webgrabe.provider.InvoiceTable;
-import com.kostya.webgrabe.provider.WeighingTable;
+import com.kostya.webgrabe.provider.DaoSession;
+import com.kostya.webgrabe.provider.Invoice;
+import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Weighing;
+import com.kostya.webgrabe.provider.WeighingDao;
 import com.kostya.webscaleslibrary.module.Module;
 import com.kostya.webgrabe.settings.ActivityPreferences;
 import com.kostya.webgrabe.task.IntentServiceGoogleForm;
@@ -43,6 +46,9 @@ import com.kostya.webscaleslibrary.ScalesView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 
 /**
@@ -366,13 +372,36 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
      */
     private void removeInvoiceIsCloud(long dayAfter) {
         try{
-            InvoiceTable invoiceTable = new InvoiceTable(this);
-            WeighingTable weighingTable = new WeighingTable(this);
-            Cursor result = invoiceTable.getIsCloud();
-            result.moveToFirst();
-            if (!result.isAfterLast()) {
-                do {
+            //InvoiceTable invoiceTable = new InvoiceTable(this);
+            //WeighingTable weighingTable = new WeighingTable(this);
+            //Cursor result = invoiceTable.getIsCloud();
+            DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+            InvoiceDao invoiceDao = daoSession.getInvoiceDao();
+            List<Invoice> invoices = invoiceDao.queryBuilder().where(InvoiceDao.Properties.IsCloud.eq(true)).list();
+            List<Weighing> weighings = daoSession.getWeighingDao().loadAll();
+            //result.moveToFirst();
+
+            //if (!result.isAfterLast()) {
+
+            for (Invoice invoice : invoices) {
+                long id = invoice.getId();
+                String date = invoice.getDateCreate();
+                long day = 0;
+                try {
+                    day = Invoice.dayDiff(new Date(), new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).parse(date));
+                } catch (ParseException e) {
+                    Log.e("TAG", e.getMessage());
+                }
+                if (day > dayAfter) {
+                    //invoiceTable.removeEntry(id);
+                    daoSession.getInvoiceDao().deleteByKey(id);
+                    //weighingTable.removeEntryInvoice(id);
+                    daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(id)).unique().delete();
+                }
+            }
+                /*do {
                     int id = result.getInt(result.getColumnIndex(InvoiceTable.KEY_ID));
+                    //int id = invoices.getInt(result.getColumnIndex(InvoiceTable.KEY_ID));
                     String date = result.getString(result.getColumnIndex(InvoiceTable.KEY_DATE_CREATE));
                     long day = 0;
                     try {
@@ -384,9 +413,9 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
                         invoiceTable.removeEntry(id);
                         weighingTable.removeEntryInvoice(id);
                     }
-                } while (result.moveToNext());
-            }
-            result.close();
+                } while (result.moveToNext());*/
+            //}
+            //result.close();
         } catch (Exception e) {
         }
     }

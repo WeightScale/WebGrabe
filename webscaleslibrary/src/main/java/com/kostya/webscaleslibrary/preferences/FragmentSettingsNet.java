@@ -1,5 +1,6 @@
 package com.kostya.webscaleslibrary.preferences;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -126,6 +127,19 @@ public class FragmentSettingsNet extends PreferenceFragment {
                     }
                 });
             }
+        },
+        CLOSED(R.string.KEY_CLOSED){
+            @Override
+            void setup(Preference name) {
+                final Context context = name.getContext();
+                name.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        ((Activity) preference.getContext()).onBackPressed();
+                        return false;
+                    }
+                });
+            }
         };
         private final int resId;
         abstract void setup(Preference name);
@@ -135,6 +149,8 @@ public class FragmentSettingsNet extends PreferenceFragment {
         }
         int getResId() { return resId; }
     }
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

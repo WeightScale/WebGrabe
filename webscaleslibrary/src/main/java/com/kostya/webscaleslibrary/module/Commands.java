@@ -44,13 +44,13 @@ public abstract class Commands {
     }
 
     /** Класс комманды отправленн стабильный вес */
-    class ClassSWT{
+    public class ClassSWT{
         @SerializedName("cmd")
         String command;
         @SerializedName("d")
         String time;
         @SerializedName("v")
-        double weight;
+        public double weight;
     }
 
     /** Класс комманда сбросить в ноль */

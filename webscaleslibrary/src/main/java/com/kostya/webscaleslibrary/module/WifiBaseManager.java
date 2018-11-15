@@ -127,7 +127,7 @@ public class WifiBaseManager {
     private void connectNet(int netId){
         try {connectionReceiver.unregister();} catch (Exception e) {} // do nothing
         connectionReceiver = new ConnectionReceiver(context);
-        connectionReceiver.register(new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        connectionReceiver.register();
         wifiManager.disconnect();
         wifiManager.enableNetwork(netId, true);
         wifiManager.reconnect();
@@ -210,11 +210,7 @@ public class WifiBaseManager {
                     try {connectionReceiver.unregister();} catch (Exception e) {} // do nothing
                     /* Регестрируем приемник заново. */
                     connectionReceiver = new ConnectionReceiver(context);
-                    IntentFilter intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-                    //IntentFilter intentFilter = new IntentFilter(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
-                    //intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
-                    //intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-                    connectionReceiver.register(intentFilter);
+                    connectionReceiver.register();
                     /* Если есть конфигурация тогда соеденяемся. */
                     if(isConfigNet){
                         wifiManager.disconnect();
@@ -253,75 +249,39 @@ public class WifiBaseManager {
     /** Приемник событий связаных с соединением wifi.  */
     private class ConnectionReceiver extends BroadcastReceiver {
         private final Context mContext;
+        private final IntentFilter intentFilter;
         boolean isRegistered;
 
         ConnectionReceiver(Context context){
             mContext = context;
+            intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         }
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            /*if (action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION)) {
-                if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED, false)){
-                    Log.i(TAG, WifiManager.EXTRA_SUPPLICANT_CONNECTED);
-                } else {
-                    Log.i(TAG, " ");
-                }
-            }*/
-            //SupplicantState state = intent.getParcelableExtra(WifiManager.EXTRA_PREVIOUS_WIFI_STATE);
-            //if (state == null)
-                //return;
-            //switch (state){
-                //case COMPLETED:
-                    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-                    NetworkInfo networkInfo = Objects.requireNonNull(cm).getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                    if (networkInfo.isConnected()){
-                        //SupplicantState state = intent.getParcelableExtra(ConnectivityManager.);
-                        WifiInfo wifiInfo = Objects.requireNonNull(wifiManager).getConnectionInfo();
-                        if (wifiInfo.getSSID().replace("\"", "").equals(Module.SSID)){
-                             /*Если верно удаляем приемник сообщений.*/
-                            unregister();
-                             /*Посылаем событие соединение.*/
-                            onAttachNetwork();
-                        }else {
-                            /* Удаляем приемник сообщений. */
-                            unregister();
-                            //wifiManager.disconnect();
-                             /*Запускаем приемник на прием события результат сканирования.*/
-                            scanWifiReceiver.register();          //todo
-                             /*Запускаем сканирование сети. */
-                            wifiManager.startScan();
-                        }
-                    }
-                //break;
-
-            //}
-
-            /*ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = Objects.requireNonNull(cm).getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            WifiInfo wifiInfo = Objects.requireNonNull(wifiManager).getConnectionInfo();
-             *//*Проверяем событие соединение с конкретной сетью. *//*
-            if (networkInfo.isConnected() && wifiInfo.getSSID().replace("\"", "").equals(Module.SSID)) {
-                 *//*Если верно удаляем приемник сообщений. *//*
-                unregister();
-                 *//*Посылаем событие соединение. *//*
-                onAttachNetwork();
-                return;
+            if (networkInfo.isConnected()){
+                //SupplicantState state = intent.getParcelableExtra(ConnectivityManager.);
+                WifiInfo wifiInfo = Objects.requireNonNull(wifiManager).getConnectionInfo();
+                if (wifiInfo.getSSID().replace("\"", "").equals(Module.SSID)){
+                    /*Если верно удаляем приемник сообщений.*/
+                    unregister();
+                    /*Посылаем событие соединение.*/
+                    onAttachNetwork();
+                }else {
+                    /* Удаляем приемник сообщений. */
+                    unregister();
+                    //wifiManager.disconnect();
+                    /*Запускаем приемник на прием события результат сканирования.*/
+                    scanWifiReceiver.register();          //todo
+                    /*Запускаем сканирование сети. */
+                    wifiManager.startScan();
+                }
             }
-            *//* Проверяем событие ОШИБКА АВТОРИЗАЦИИ при подключении к сети. *//*
-            int error=intent.getIntExtra(WifiManager.EXTRA_SUPPLICANT_ERROR, -1);
-            if(error== WifiManager.ERROR_AUTHENTICATING){
-                 *//*Удаляем приемник сообщений.*//*
-                unregister();
-                 *//*Запускаем приемник на прием события результат сканирования.*//*
-                scanWifiReceiver.register();          //todo
-                 *//*Запускаем сканирование сети. *//*
-                wifiManager.startScan();
-            }*/
         }
 
-        void register(IntentFilter intentFilter){
+        void register(){
             isRegistered = true;
             mContext.registerReceiver(this, intentFilter);
         }

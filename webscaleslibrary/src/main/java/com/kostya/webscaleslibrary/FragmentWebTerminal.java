@@ -70,6 +70,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     private static final String ARG_SSID = FragmentWebTerminal.class.getSimpleName()+"SSID";
     private String version;
     private String ssid;
+    int battery;
     private double moduleWeight;
     private boolean touchWeightView;
     private boolean weightViewIsSwipe;
@@ -498,6 +499,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     }
 
     private void startCheckGetWeight() {
+        Commands.WT.getParam();
         handler.postDelayed(checkGetWeightRunable, 5000);
     }
 
@@ -509,18 +511,16 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         @Override
         public void run() {
             weightTextView.setText(String.valueOf("--"));
-            Commands.WT.getParam();
-            //handler.postDelayed(checkGetWeightRunable, 5000);
             startCheckGetWeight();
         }
     };
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventSocket(Client.MessageEventSocket eventSocket){
-        weightTextView.setText(String.valueOf(eventSocket.text));
+        SpannableStringBuilder text = new SpannableStringBuilder(String.valueOf(eventSocket.message.toString() + " " + eventSocket.text));
+        text.setSpan(new TextAppearanceSpan(getActivity(), R.style.SpanTextKgMini),0,text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        weightTextView.setText(text, TextView.BufferType.SPANNABLE);
         if(eventSocket.message == Client.MessageEventSocket.Message.CONNECT){
-            Commands.WT.getParam();
-            //handler.postAtTime(checkGetWeightRunable, 5000);
             startCheckGetWeight();
         }
         //Log.i("Event", eventSocket.text);
@@ -538,9 +538,38 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         //final String textWeight = setPrecision(moduleWeight, 3);
         /* Обновляем прогресс стабилизации веса. */
         progressBarStable.setProgress(Module.STABLE_NUM_MAX - event.stable);                          //todo
-        weightTextView.setText(event.weight);
+        SpannableStringBuilder w = new SpannableStringBuilder(event.weight);
+        w.setSpan(new ForegroundColorSpan(Color.WHITE), 0, w.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        w.append(textKg);
+        weightTextView.setText(w, TextView.BufferType.SPANNABLE);
+        if(battery != event.charge){
+            battery = event.charge;
+            textViewBattery.setText(event.charge + "%");
+            textViewBattery.setTextColor(Color.WHITE);
+            if (event.charge > 90) {
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_full, 0, 0, 0);
+            } else if (event.charge > 80){
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_90, 0, 0, 0);
+            } else if (event.charge > 60){
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_80, 0, 0, 0);
+            } else if (event.charge > 50){
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_60, 0, 0, 0);
+            } else if (event.charge > 30){
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_50, 0, 0, 0);
+            } else if (event.charge > 20){
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_30, 0, 0, 0);
+            } else if (event.charge >= 0) {
+                //textViewBattery.setText(obj.getBattery() + "%");
+                textViewBattery.setTextColor(Color.RED);
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
+            }else {
+                textViewBattery.setText("нет данных!!!");
+                textViewBattery.setTextColor(Color.BLUE);
+                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
+            }
+        }
+
         try {Thread.sleep(10);} catch (InterruptedException e) {}
-        Commands.WT.getParam();
         startCheckGetWeight();
         //handler.postDelayed(checkGetWeightRunable, 5000);
     }

@@ -26,6 +26,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
@@ -40,14 +41,22 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.kostya.webgrabe.provider.InvoiceTable;
-import com.kostya.webgrabe.provider.WeighingTable;
+import com.kostya.webgrabe.provider.DaoSession;
+import com.kostya.webgrabe.provider.Invoice;
+import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Weighing;
+import com.kostya.webgrabe.provider.WeighingDao;
 import com.kostya.webgrabe.scales.InterfaceModule;
 import com.kostya.webscaleslibrary.module.ObjectScales;
 import com.kostya.webgrabe.settings.ActivityPreferences;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -60,16 +69,18 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     private Vibrator vibrator; //вибратор
     private SoundPool soundPool;
     private SimpleCursorAdapter adapterWeightingList;
-    private InvoiceTable invoiceTable;
-    private WeighingTable weighingTable;
-    private ContentValues values = new ContentValues();
+    DaoSession daoSession;
+    //private InvoiceTable invoiceTable;
+    //private WeighingTable weighingTable;
+    //private ContentValues values = new ContentValues();
+    private Invoice values = new Invoice();
     private EditText nameInvoice, loadingInvoice, totalInvoice;
     private TextView dateInvoice,textViewStage, textViewBatch;
     private Button buttonClosed;
     private ListView listInvoice;
     private BaseReceiver baseReceiver; //приёмник намерений
     //private Settings settings;
-    private int entryID;
+    private long entryID;
     private int shutterSound, shutterSound3;
     private int deltaStab, capture;
     private double grab, grab_virtual,auto,loading;
@@ -136,30 +147,40 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         keyguardLock.disableKeyguard();*/
 
         if (getArguments() != null) {
-            values.put(InvoiceTable.KEY_DATE_CREATE, getArguments().getString(ARG_DATE));
-            values.put(InvoiceTable.KEY_TIME_CREATE, getArguments().getString(ARG_TIME));
+            //values.put(InvoiceTable.KEY_DATE_CREATE, getArguments().getString(ARG_DATE));
+            //values.put(InvoiceTable.KEY_TIME_CREATE, getArguments().getString(ARG_TIME));
+            values.setDateCreate(getArguments().getString(ARG_DATE));
+            values.setTimeCreate(getArguments().getString(ARG_TIME));
             _id = getArguments().getString(ARG_ID);
         }else {
-            values.put(InvoiceTable.KEY_DATE_CREATE, new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
-            values.put(InvoiceTable.KEY_TIME_CREATE, new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+            //values.put(InvoiceTable.KEY_DATE_CREATE, new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
+            //values.put(InvoiceTable.KEY_TIME_CREATE, new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+            //values.put(InvoiceDao.Properties.DateCreate.columnName, new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
+            //values.put(InvoiceDao.Properties.TimeCreate.columnName, new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+            values.setDateCreate(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
+            values.setTimeCreate(new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
         }
         vibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
         //settings = new Settings(getActivity()/*, ActivityTest.SETTINGS*/);
 
-        invoiceTable = new InvoiceTable(getActivity());
+        //invoiceTable = new InvoiceTable(getActivity());
+        daoSession = ((Main)getActivity().getApplication()).getDaoSession();
         if (_id == null){
-            entryID = Integer.valueOf(invoiceTable.insertNewEntry(values).getLastPathSegment());
+            //entryID = Integer.valueOf(invoiceTable.insertNewEntry(values).getLastPathSegment());
+            entryID = daoSession.getInvoiceDao().insert(values);
         }else {
-            entryID = Integer.valueOf(_id);
+            entryID = Long.valueOf(_id);
         }
 
         try {
-            values = invoiceTable.getValuesItem(entryID);
+            //values = invoiceTable.getValuesItem(entryID);
+            values = daoSession.getInvoiceDao().loadByRowId(entryID);
+            //values = Invoice.getValuesItem(daoSession.getInvoiceDao(), entryID);
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
 
-        weighingTable = new WeighingTable(getActivity());
+        //weighingTable = new WeighingTable(getActivity());
 
         baseReceiver = new BaseReceiver(getActivity());
         baseReceiver.register();
@@ -170,8 +191,15 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+        EventBus.getDefault().register(this);
         //updateSettings(settings);
     }
 
@@ -183,11 +211,14 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         textViewBatch = view.findViewById(R.id.textViewBatch);
 
         dateInvoice = view.findViewById(R.id.invoiceDate);
-        dateInvoice.setText(values.getAsString(InvoiceTable.KEY_DATE_CREATE));
-        dateInvoice.append(' ' +values.getAsString(InvoiceTable.KEY_TIME_CREATE));
+        //dateInvoice.setText(values.getAsString(InvoiceTable.KEY_DATE_CREATE));
+        //dateInvoice.append(' ' +values.getAsString(InvoiceTable.KEY_TIME_CREATE));
+        dateInvoice.setText(values.getDateCreate());
+        dateInvoice.append(' ' +values.getTimeCreate());
 
         nameInvoice = view.findViewById(R.id.invoiceName);
-        nameInvoice.setText(values.getAsString(InvoiceTable.KEY_NAME_AUTO));
+        //nameInvoice.setText(values.getAsString(InvoiceTable.KEY_NAME_AUTO));
+        nameInvoice.setText(values.getNameAuto());
         nameInvoice.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -202,8 +233,10 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             @Override
             public void afterTextChanged(Editable editable) {
                 if (!editable.toString().isEmpty()) {
-                    values.put(InvoiceTable.KEY_NAME_AUTO, editable.toString());
-                    invoiceTable.updateEntry(entryID, values);
+                    //values.put(InvoiceTable.KEY_NAME_AUTO, editable.toString());
+                    //invoiceTable.updateEntry(entryID, values);
+                    values.setNameAuto(editable.toString());
+                    values.update();
                 }
             }
         });
@@ -227,7 +260,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             @Override
             public void afterTextChanged(Editable editable) {
                 if (!editable.toString().isEmpty()) {
-                    loading = Integer.valueOf(editable.toString());
+                    loading = Double.valueOf(editable.toString());
                 }
             }
         });
@@ -235,7 +268,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         listInvoice = view.findViewById(R.id.invoiceList);
         updateListWeight();
         totalInvoice = view.findViewById(R.id.invoiceTotal);
-        totalInvoice.setText(values.getAsString(InvoiceTable.KEY_TOTAL_WEIGHT));
+        //totalInvoice.setText(values.getAsString(InvoiceTable.KEY_TOTAL_WEIGHT));
+        totalInvoice.setText(String.valueOf(values.getTotalWeight()));
 
         buttonClosed = view.findViewById(R.id.buttonCloseInvoice);
         buttonClosed.setOnClickListener(this);
@@ -295,7 +329,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                     CustomDialogFragment.BUTTON button = CustomDialogFragment.BUTTON.values()[data.getIntExtra(CustomDialogFragment.ARG_BUTTON, CustomDialogFragment.BUTTON.CANCEL.ordinal())];
                         switch (button){
                             case OK:
-                                values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
+                                //values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
+                                values.setIsReady(true);
                             break;
                             default:{}
                         }
@@ -320,7 +355,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
 
     /** Закрыть накладную. */
     private void onClose() {
-        invoiceTable.updateEntry(entryID, values);
+        //invoiceTable.updateEntry(entryID, values);
+        values.update();
         ((ActivityMain)Objects.requireNonNull(getActivity())).closedFragmentInvoice();
     }
 
@@ -375,21 +411,30 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         }
     }*/
 
-    private void removeRowWeight(int weight, int id) {
+    private void removeRowWeight(double weight, long id) {
         vibrator.vibrate(100);
         auto-= weight;
-        values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
-        invoiceTable.updateEntry(entryID, values);
+        //values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
+        //invoiceTable.updateEntry(entryID, values);
+        values.setTotalWeight(auto);
+        values.update();
         updateTotal(auto);
-        weighingTable.removeEntry(id);
+        //weighingTable.removeEntry(id);
+        daoSession.getWeighingDao().loadByRowId(id).delete();
     }
 
     private void addRowWeight(double weight){
         vibrator.vibrate(100);
         auto += weight;
-        values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
-        weighingTable.insertNewEntry(entryID, weight);
-        invoiceTable.updateEntry(entryID, values);
+        //values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
+        //weighingTable.insertNewEntry(entryID, weight);
+        //invoiceTable.updateEntry(entryID, values);
+        values.setTotalWeight(auto);
+        values.update();
+        Weighing weighing = new Weighing();
+        weighing.setIdInvoice(entryID);
+        weighing.setWeight(weight);
+        daoSession.getWeighingDao().insert(weighing);
         updateTotal(auto);
     }
 
@@ -397,19 +442,22 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         SpannableStringBuilder w = new SpannableStringBuilder(String.valueOf(weight));
         w.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.background2)), 0, w.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         SpannableStringBuilder textKg = new SpannableStringBuilder(getResources().getString(R.string.scales_kg));
-        //textKg.setSpan(new TextAppearanceSpan(getActivity(), R.style.SpanTextKgMiniInvoice),0,textKg.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        textKg.setSpan(new TextAppearanceSpan(getActivity(), R.style.SpanTextKgMiniInvoice),0,textKg.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         w.append(textKg);
         totalInvoice.setText(w, TextView.BufferType.SPANNABLE);
     }
 
     /** Обновляем данные листа загрузок. */
     private void updateListWeight() {
-        Cursor cursor = weighingTable.getEntryInvoice(entryID);
+        //Cursor cursor = weighingTable.getEntryInvoice(entryID);
+        Cursor cursor = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).buildCursor().query();
+        List<Weighing> weighings = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).build().list();
         if (cursor == null) {return;}
 
         int[] to = {R.id.bottomText, R.id.topText};
 
-        adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, WeighingTable.COLUMN_FOR_INVOICE, to, CursorAdapter.FLAG_AUTO_REQUERY);
+        //adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, WeighingTable.COLUMN_FOR_INVOICE, to, CursorAdapter.FLAG_AUTO_REQUERY);
+        adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, new String[]{WeighingDao.Properties.DateTimeCreate.columnName,WeighingDao.Properties.Weight.columnName}, to, CursorAdapter.FLAG_AUTO_REQUERY);
         //namesAdapter = new MyCursorAdapter(this, R.layout.item_check, cursor, columns, to);
         //adapterWeightingList.setViewBinder(new ListWeightViewBinder());
         listInvoice.setItemsCanFocus(false);
@@ -499,7 +547,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             case UPLOADED:/* Загружено. */
                 //soundPool.play(shutterSound, 1f, 1f, 0, 0, 1);
                 if (switch_closing){
-                    values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
+                    //values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
+                    values.setIsReady(true);
                     onCloseForDialog(false);
                 }
                 vibrator.vibrate(50);
@@ -599,5 +648,20 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                 isRegistered = false;
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(com.kostya.webscaleslibrary.module.Commands.ClassSWT event){
+        stable = true;
+        ObjectScales obj = new ObjectScales();
+        obj.setWeight(event.weight);
+        doProcess(obj);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(com.kostya.webscaleslibrary.module.Commands.ClassWT event){
+        ObjectScales obj = new ObjectScales();
+        obj.setWeight(Double.valueOf(event.weight));
+        doProcess(obj);
     }
 }

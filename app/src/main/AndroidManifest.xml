@@ -89,10 +89,6 @@
             android:enabled="true"
             android:exported="true"/>
 
-        <provider
-            android:name=".provider.CraneScalesBaseProvider"
-            android:authorities="com.kostya.scalegrab.craneScales"
-            android:exported="true"/>
     </application>
 
 </manifest>

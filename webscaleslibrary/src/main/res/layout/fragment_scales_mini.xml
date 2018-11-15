@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:background="@color/background2">
@@ -17,75 +18,62 @@
                 android:id="@+id/layoutIndicator">
 
             <LinearLayout
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="right">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
 
+                <TextView
+                    android:id="@+id/weightTextView"
+                    style="@style/shadowEffect2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:longClickable="true"
+                    android:maxLines="1"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_large_xx"
+                    android:textStyle="bold|italic" />
 
-                    <TextView
-                            style="@style/shadowEffect2"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/weightTextView"
-                            android:textColor="@color/white"
-                            android:textSize="@dimen/text_large_xx"
-                            android:gravity="center"
-                            android:textStyle="bold|italic"
-                            android:layout_gravity="bottom"
-                            android:layout_weight="1"
-                            android:longClickable="true"
-                            android:clickable="true"
-                            android:maxLines="1"/>
+                <LinearLayout
+                    android:id="@+id/layoutSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_horizontal|end"
+                    android:orientation="horizontal">
 
                     <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="wrap_content"
-                            android:layout_height="fill_parent"
-                            android:id="@+id/layoutSub"
-                            >
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="start"
+                        android:orientation="horizontal">
 
-                        <LinearLayout
-                                android:orientation="horizontal"
-                                android:layout_width="wrap_content"
-                                android:layout_height="fill_parent"
-                                >
+                        <TextView
+                            android:id="@+id/textBattery"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:drawableStart="@drawable/ic_battery_full"
+                            android:gravity="center_vertical|start"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/text_large"
+                            android:textStyle="bold" />
 
-                            <TextView
-                                    android:id="@+id/textBattery"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="fill_parent"
-                                    android:textAppearance="?android:attr/textAppearanceMedium"
-                                    android:textStyle="bold"
-                                    android:textColor="@color/white"
-                                    android:drawableLeft="@drawable/ic_battery_full"
-                                    android:textSize="@dimen/text_large"
-                                    android:gravity="left|center_vertical"/>
-
-                            <TextView
-                                    android:id="@+id/textTemperature"
-                                    android:layout_width="0dp"
-                                    android:layout_height="fill_parent"
-                                    android:textAppearance="?android:attr/textAppearanceMedium"
-                                    android:textStyle="bold"
-                                    android:textColor="@color/white"
-                                    android:drawableLeft="@drawable/ic_temperature1"
-                                    android:textSize="@dimen/text_large"
-                                    android:layout_weight="1"
-                                    android:gravity="left|center_vertical"/>
-
-                        </LinearLayout>
-
-                        <ImageButton
-                                android:layout_width="fill_parent"
-                                android:layout_height="fill_parent"
-                                android:id="@+id/buttonSettings"
-                                android:src="@drawable/ic_properties"
-                                style="@style/CustomButtonSettings"
-                                android:clickable="true"
-                                android:padding="5dp"
-                                />
                     </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/buttonSettings"
+                        style="@style/CustomButtonSettings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:clickable="true"
+                        android:contentDescription="@string/Settings"
+                        android:focusable="true"
+                        android:padding="5dp"
+                        android:src="@drawable/ic_settings_admin" />
+                </LinearLayout>
 
                 <!--<LinearLayout
                         android:orientation="horizontal"
@@ -118,14 +106,14 @@
                     android:layout_gravity="bottom"/>
 
             <ProgressBar
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                    android:layout_width="fill_parent"
-                    android:layout_height="@dimen/height_progress_weight"
-                    android:id="@+id/progressBarWeight"
-                    android:layout_gravity="left|center_vertical"
-                    android:progressDrawable="@drawable/progress_weight"
-                    android:focusableInTouchMode="false"
-                    android:layout_marginBottom="@dimen/padding"/>
+                android:id="@+id/progressBarWeight"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/height_progress_weight"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginBottom="@dimen/padding"
+                android:focusableInTouchMode="false"
+                android:progressDrawable="@drawable/progress_weight" />
         </LinearLayout>
 
 

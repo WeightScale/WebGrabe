@@ -33,7 +33,7 @@
 
     <style name="SpanTextKgMini" parent="@android:style/TextAppearance">
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">@dimen/text_large</item>
+        <item name="android:textSize">@dimen/text_medium</item>
         <item name="android:textStyle">italic</item>
     </style>
 
