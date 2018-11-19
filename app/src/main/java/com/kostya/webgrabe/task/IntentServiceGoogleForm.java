@@ -6,7 +6,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,12 +19,10 @@ import com.kostya.webgrabe.Globals;
 import com.kostya.webgrabe.Main;
 import com.kostya.webgrabe.R;
 import com.kostya.webgrabe.internet.Internet;
-import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Invoice_;
 import com.kostya.webgrabe.settings.ActivityPreferences;
 
-import org.greenrobot.greendao.query.QueryBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -58,6 +55,8 @@ import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.params.BasicHttpParams;
 import cz.msebera.android.httpclient.params.HttpConnectionParams;
 import cz.msebera.android.httpclient.params.HttpParams;
+import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 
 //import android.support.v7.app.NotificationCompat;
 
@@ -177,12 +176,15 @@ public class IntentServiceGoogleForm extends IntentService {
         //InputStream inputStream = new FileInputStream(path);
         GoogleForms.Form form = new GoogleForms(inputStream).createForm(nameForm);
         //Cursor invoice = new InvoiceTable(getApplicationContext()).getPreliminary(new Date());
-        DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+        //DaoSession daoSession = ((Main)getApplication()).getDaoSession();
         String d = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date());
-        QueryBuilder<Invoice> queryBuilder = daoSession.getInvoiceDao().queryBuilder();
-        queryBuilder.where(InvoiceDao.Properties.IsCloud.eq(false), InvoiceDao.Properties.IsReady.eq(true));
-        queryBuilder.whereOr(InvoiceDao.Properties.DateCreate.notEq(d),null);
-        List<Invoice> invoices = queryBuilder.list();
+        QueryBuilder<Invoice> queryBuilder = ((Main)getApplication()).getBoxStore().boxFor(Invoice.class).query(); // daoSession.getInvoiceDao().queryBuilder();
+        queryBuilder.equal(Invoice_.isCloud,false)
+                .equal(Invoice_.isReady,true)
+                .or().notEqual(Invoice_.dateCreate, d);
+        //queryBuilder.where(InvoiceDao.Properties.IsCloud.eq(false), InvoiceDao.Properties.IsReady.eq(true));
+        //queryBuilder.whereOr(InvoiceDao.Properties.DateCreate.notEq(d),null);
+        List<Invoice> invoices = queryBuilder.build().find();
         if (invoices.size() > 0) {
             for (Invoice invoice : invoices){
                 double weight = invoice.getTotalWeight();
@@ -196,7 +198,7 @@ public class IntentServiceGoogleForm extends IntentService {
 
                 for (BasicNameValuePair valuePair : values){
                     try {
-                        if(valuePair.getValue().equals(InvoiceDao.Properties.IsReady.columnName)){
+                        if(valuePair.getValue().equals(Invoice_.isReady.dbName)){
                             boolean i = invoice.getIsReady();
                             if (i){
                                 results.add(new ValuePair(valuePair.getName(), ""));
@@ -211,7 +213,8 @@ public class IntentServiceGoogleForm extends IntentService {
                 try {
                     submitData(http, results);
                     invoice.setIsCloud(true);
-                    invoice.update();
+                    ((Main)getApplication()).getBoxStore().boxFor(Invoice.class).put(invoice);
+                    //invoice.update();
                 }catch (Exception e){
                     Log.e(TAG, e.getMessage());
                 }

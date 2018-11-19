@@ -1,7 +1,6 @@
 package com.kostya.webgrabe;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -18,14 +17,15 @@ import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Invoice_;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import io.objectbox.BoxStore;
 
 /**
  * @author Kostya on 10.12.2016.
@@ -33,7 +33,8 @@ import java.util.Locale;
 public class FragmentListArchiveInvoice extends Fragment {
     private SimpleCursorAdapter simpleCursorAdapter;
     //private InvoiceTable invoiceTable;
-    DaoSession daoSession;
+    //DaoSession daoSession;
+    BoxStore boxStore;
     private TextView dateText, totalWeight;
     private RecyclerView recyclerView;
     //ListView listView;
@@ -64,7 +65,8 @@ public class FragmentListArchiveInvoice extends Fragment {
             total = "";
         }
         //invoiceTable = new InvoiceTable(getActivity());
-        daoSession = ((Main)getActivity().getApplication()).getDaoSession();
+        //daoSession = ((Main)getActivity().getApplication()).getDaoSession();
+        boxStore = ((Main)getActivity().getApplication()).getBoxStore();
     }
 
     @Override
@@ -99,8 +101,8 @@ public class FragmentListArchiveInvoice extends Fragment {
 
     private void updateRecyclerView() {
         //Cursor cursor = invoiceTable.getToday(date);
-        List<Invoice> invoices = daoSession.getInvoiceDao().queryBuilder().where(InvoiceDao.Properties.DateCreate.eq(date)).list();
-
+        //List<Invoice> invoices = daoSession.getInvoiceDao().queryBuilder().where(InvoiceDao.Properties.DateCreate.eq(date)).list();
+        List<Invoice> invoices = boxStore.boxFor(Invoice.class).find(Invoice_.dateCreate, date);
         /*if (cursor == null) {
             return;
         }*/

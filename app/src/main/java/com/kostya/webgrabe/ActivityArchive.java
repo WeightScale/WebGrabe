@@ -15,16 +15,18 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.InvoiceDao;
-
-import org.greenrobot.greendao.query.Query;
-import org.greenrobot.greendao.query.WhereCondition;
+import com.kostya.webgrabe.provider.Invoice_;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+
+import io.objectbox.BoxStore;
+import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 
 public class ActivityArchive extends AppCompatActivity {
     //private SectionsPagerAdapter mSectionsPagerAdapter;
@@ -41,33 +43,36 @@ public class ActivityArchive extends AppCompatActivity {
         //setSupportActionBar(toolbar);
 
 
-        DaoSession daoSession = ((Main)getApplication()).getDaoSession();
-        Cursor cursor = daoSession.getDatabase()
+        //DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+        BoxStore boxStore = ((Main)getApplication()).getBoxStore();
+        QueryBuilder<Invoice> queryBuilder = boxStore.boxFor(Invoice.class).query();
+        queryBuilder.notNull(Invoice_.dateCreate);
+        Query<Invoice> query = queryBuilder.build();
+        /*Cursor cursor = daoSession.getDatabase()
                 .rawQuery("SELECT "
                         + InvoiceDao.Properties.Id.columnName
                         +", "+InvoiceDao.Properties.DateCreate.columnName
                         +", sum(" + InvoiceDao.Properties.TotalWeight.columnName + ") AS \""+InvoiceDao.Properties.TotalWeight.columnName+"\" FROM " + InvoiceDao.TABLENAME+" where "
-                        + InvoiceDao.Properties.DateCreate.columnName+" IS NOT NULL GROUP BY "+InvoiceDao.Properties.DateCreate.columnName, new String []{});
+                        + InvoiceDao.Properties.DateCreate.columnName+" IS NOT NULL GROUP BY "+InvoiceDao.Properties.DateCreate.columnName, new String []{});*/
         //invoiceTable = new InvoiceTable(this);
         //Cursor cursor = invoiceTable.getAllGroupDate();
-        if (cursor == null) {
-            return;
-        }
-        cursor.moveToFirst();
-        if (cursor.getCount() == 0){
+        List<Invoice> invoices = query.find();
+        if (invoices == null) {return;}
+        //cursor.moveToFirst();
+        if (invoices.size() == 0){
             findViewById(R.id.archive_empty).setVisibility(View.VISIBLE);
             return;
         }
         mViewPager = findViewById(R.id.container);
-        cursorFragmentPagerAdapter = new CursorFragmentPagerAdapter(this, getSupportFragmentManager(), cursor) {
+        cursorFragmentPagerAdapter = new CursorFragmentPagerAdapter(this, getSupportFragmentManager(), invoices) {
             @Override
-            public Fragment getItem(Context context, Cursor cursor) {
+            public Fragment getItem(Context context, Invoice invoice) {
                 //String d = cursor.getString(cursor.getColumnIndex(InvoiceTable.KEY_DATE_CREATE));
-                String d = cursor.getString(cursor.getColumnIndex(InvoiceDao.Properties.DateCreate.columnName));
+                String d = invoice.getDateCreate();// cursor.getString(cursor.getColumnIndex(InvoiceDao.Properties.DateCreate.columnName));
                 //int w = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
                 //double w = cursor.getDouble(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
-                double w = cursor.getDouble(cursor.getColumnIndex(InvoiceDao.Properties.TotalWeight.columnName));
-                return com.kostya.webgrabe.FragmentListArchiveInvoice.newInstance(d, String.valueOf(w));
+                double w = invoice.getTotalWeight(); // cursor.getDouble(cursor.getColumnIndex(InvoiceDao.Properties.TotalWeight.columnName));
+                return FragmentListArchiveInvoice.newInstance(d, String.valueOf(w));
             }
         };
         mViewPager.setAdapter(cursorFragmentPagerAdapter);
@@ -100,30 +105,32 @@ public class ActivityArchive extends AppCompatActivity {
     abstract class CursorFragmentPagerAdapter extends FragmentPagerAdapter {
 
         boolean mDataValid;
-        Cursor mCursor;
+        List<Invoice> invoiceList;
+        //Cursor mCursor;
         Context mContext;
         SparseIntArray mItemPositions;
         HashMap<Object, Integer> mObjectMap;
-        int mRowIDColumn;
+        long mRowIDColumn;
 
-        CursorFragmentPagerAdapter(Context context, FragmentManager fm, Cursor cursor) {
+        CursorFragmentPagerAdapter(Context context, FragmentManager fm, List<Invoice> list) {
             super(fm);
 
-            init(context, cursor);
+            init(context, list);
         }
 
-        void init(Context context, Cursor c) {
+        void init(Context context, List<Invoice> list) {
             mObjectMap = new HashMap<Object, Integer>();
-            boolean cursorPresent = c != null;
-            mCursor = c;
+            boolean cursorPresent = list != null;
+            invoiceList = list;
             mDataValid = cursorPresent;
             mContext = context;
-            mRowIDColumn = cursorPresent ? c.getColumnIndexOrThrow("_id") : -1;
+
+            //mRowIDColumn = cursorPresent ? c.getColumnIndexOrThrow("_id") : -1;
         }
 
-        public Cursor getCursor() {
+        /*public Cursor getCursor() {
             return mCursor;
-        }
+        }*/
 
         @Override
         public int getItemPosition(Object object) {
@@ -138,22 +145,29 @@ public class ActivityArchive extends AppCompatActivity {
             mItemPositions = null;
 
             if (mDataValid) {
-                int count = mCursor.getCount();
+                int count = invoiceList.size();
                 mItemPositions = new SparseIntArray(count);
-                mCursor.moveToPosition(-1);
-                while (mCursor.moveToNext()) {
+                //mCursor.moveToPosition(-1);
+                Iterator<Invoice> invoiceIterator = invoiceList.iterator();
+                while (invoiceIterator.hasNext()){
+                    Invoice invoice =invoiceIterator.next();
+                    long rowId = invoice.getId();
+                    int cursorPos = 0;// = mCursor.getPosition();
+                    mItemPositions.append((int) rowId, cursorPos);
+                }
+                /*while (mCursor.moveToNext()) {
                     int rowId = mCursor.getInt(mRowIDColumn);
                     int cursorPos = mCursor.getPosition();
                     mItemPositions.append(rowId, cursorPos);
-                }
+                }*/
             }
         }
 
         @Override
         public Fragment getItem(int position) {
             if (mDataValid) {
-                mCursor.moveToPosition(position);
-                return getItem(mContext, mCursor);
+                //mCursor.moveToPosition(position);
+                return getItem(mContext, invoiceList.get(position));
             } else {
                 return null;
             }
@@ -171,36 +185,39 @@ public class ActivityArchive extends AppCompatActivity {
             if (!mDataValid) {
                 throw new IllegalStateException("this should only be called when the cursor is valid");
             }
-            if (!mCursor.moveToPosition(position)) {
+            /*if (!mCursor.moveToPosition(position)) {
+                throw new IllegalStateException("couldn't move cursor to position " + position);
+            }*/
+            if (invoiceList.get(position)==null) {
                 throw new IllegalStateException("couldn't move cursor to position " + position);
             }
 
-            int rowId = mCursor.getInt(mRowIDColumn);
+            long rowId = invoiceList.get((int) mRowIDColumn).getId();
             Object obj = super.instantiateItem(container, position);
-            mObjectMap.put(obj, rowId);
+            mObjectMap.put(obj, (int)rowId);
 
             return obj;
         }
 
-        protected abstract Fragment getItem(Context context, Cursor cursor);
+        protected abstract Fragment getItem(Context context, Invoice invoice);
 
         @Override
         public int getCount() {
             if (mDataValid) {
-                return mCursor.getCount();
+                return invoiceList.size();
             } else {
                 return 0;
             }
         }
 
-        public void changeCursor(Cursor cursor) {
+        /*public void changeCursor(Cursor cursor) {
             Cursor old = swapCursor(cursor);
             if (old != null) {
                 old.close();
             }
-        }
+        }*/
 
-        Cursor swapCursor(Cursor newCursor) {
+        /*Cursor swapCursor(Cursor newCursor) {
             if (newCursor == mCursor) {
                 return null;
             }
@@ -222,7 +239,7 @@ public class ActivityArchive extends AppCompatActivity {
 
 
             return oldCursor;
-        }
+        }*/
 
     }
 }

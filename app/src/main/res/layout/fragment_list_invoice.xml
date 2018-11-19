@@ -11,10 +11,10 @@
             ads:adSize="SMART_BANNER"
             ads:adUnitId="@string/banner_ad_unit_id">
     </com.google.android.gms.ads.AdView>
-    <ListView
-            android:id="@android:id/list"
+    <android.support.v7.widget.RecyclerView
+            android:id="@+id/invoiceList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" >
-    </ListView>
+    </android.support.v7.widget.RecyclerView>
 
 </LinearLayout>

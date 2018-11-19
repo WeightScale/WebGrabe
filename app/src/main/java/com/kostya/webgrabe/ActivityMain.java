@@ -6,7 +6,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
@@ -32,11 +31,10 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.kostya.webgrabe.internet.Internet;
-import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Invoice_;
 import com.kostya.webgrabe.provider.Weighing;
-import com.kostya.webgrabe.provider.WeighingDao;
+import com.kostya.webgrabe.provider.Weighing_;
 import com.kostya.webscaleslibrary.module.Module;
 import com.kostya.webgrabe.settings.ActivityPreferences;
 import com.kostya.webgrabe.task.IntentServiceGoogleForm;
@@ -46,10 +44,11 @@ import com.kostya.webscaleslibrary.ScalesView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
+
+import io.objectbox.BoxStore;
+import io.objectbox.query.Query;
 
 /**
  * @author Kostya on 02.10.2016.
@@ -100,7 +99,7 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View view) {
                 //SnackBar.make(view, "Replace with your own action", SnackBar.LENGTH_LONG).setAction("Action", null).show();
-                openFragmentInvoice(null);
+                openFragmentInvoice(0);
             }
         });
 
@@ -181,7 +180,7 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
                 startActivity(new Intent(getApplicationContext(), ActivityPreferences.class));
             break;
             case R.id.new_invoice:
-                openFragmentInvoice(null);
+                openFragmentInvoice(0);
             break;
             case R.id.power:
                 finish();
@@ -305,7 +304,7 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
     }
 
     @SuppressLint("RestrictedApi")
-    public boolean openFragmentInvoice(String id){
+    public boolean openFragmentInvoice(long id){
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(com.kostya.webgrabe.FragmentInvoice.class.getSimpleName());
         if (fragment instanceof com.kostya.webgrabe.FragmentInvoice){
             return false;
@@ -375,10 +374,12 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
             //InvoiceTable invoiceTable = new InvoiceTable(this);
             //WeighingTable weighingTable = new WeighingTable(this);
             //Cursor result = invoiceTable.getIsCloud();
-            DaoSession daoSession = ((Main)getApplication()).getDaoSession();
-            InvoiceDao invoiceDao = daoSession.getInvoiceDao();
-            List<Invoice> invoices = invoiceDao.queryBuilder().where(InvoiceDao.Properties.IsCloud.eq(true)).list();
-            List<Weighing> weighings = daoSession.getWeighingDao().loadAll();
+            //DaoSession daoSession = ((Main)getApplication()).getDaoSession();
+            //InvoiceDao invoiceDao = daoSession.getInvoiceDao();
+            BoxStore boxStore = ((Main)getApplication()).getBoxStore();
+            List<Invoice> invoices = boxStore.boxFor(Invoice.class).query().equal(Invoice_.isCloud, true).build().find();// invoiceDao.queryBuilder().where(InvoiceDao.Properties.IsCloud.eq(true)).list();
+            List<Weighing> weighings = boxStore.boxFor(Weighing.class).getAll(); //daoSession.getWeighingDao().loadAll();
+            Query<Weighing> weighingQuery = boxStore.boxFor(Weighing.class).query().build();
             //result.moveToFirst();
 
             //if (!result.isAfterLast()) {
@@ -394,9 +395,11 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
                 }
                 if (day > dayAfter) {
                     //invoiceTable.removeEntry(id);
-                    daoSession.getInvoiceDao().deleteByKey(id);
+                    //daoSession.getInvoiceDao().deleteByKey(id);
+                    boxStore.boxFor(Invoice.class).remove(invoice);
                     //weighingTable.removeEntryInvoice(id);
-                    daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(id)).unique().delete();
+                    //daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(id)).unique().delete();
+                    weighingQuery.setParameter(Weighing_.idInvoice, id).remove();
                 }
             }
                 /*do {

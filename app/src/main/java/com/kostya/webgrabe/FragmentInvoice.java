@@ -7,7 +7,6 @@ import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -21,6 +20,9 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -43,9 +45,10 @@ import android.widget.TextView;
 
 import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.InvoiceDao;
+import com.kostya.webgrabe.provider.Invoice_;
 import com.kostya.webgrabe.provider.Weighing;
 import com.kostya.webgrabe.provider.WeighingDao;
+import com.kostya.webgrabe.provider.Weighing_;
 import com.kostya.webgrabe.scales.InterfaceModule;
 import com.kostya.webscaleslibrary.module.ObjectScales;
 import com.kostya.webgrabe.settings.ActivityPreferences;
@@ -60,6 +63,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import io.objectbox.Box;
+import io.objectbox.BoxStore;
+import io.objectbox.reactive.DataObserver;
+
 /**
  *
  */
@@ -68,19 +75,23 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     PowerManager.WakeLock wakeLock;
     private Vibrator vibrator; //вибратор
     private SoundPool soundPool;
-    private SimpleCursorAdapter adapterWeightingList;
-    DaoSession daoSession;
+    private WeightsAdapter adapterWeightingList;
+    List<Weighing> weighingList;
+    BoxStore boxStore;
+    Box<Invoice> invoiceBox;
+    Box<Weighing> weighingBox;
+    //DaoSession daoSession;
     //private InvoiceTable invoiceTable;
     //private WeighingTable weighingTable;
     //private ContentValues values = new ContentValues();
-    private Invoice values = new Invoice();
+    private Invoice invoice = new Invoice();
     private EditText nameInvoice, loadingInvoice, totalInvoice;
     private TextView dateInvoice,textViewStage, textViewBatch;
     private Button buttonClosed;
-    private ListView listInvoice;
+    private RecyclerView listWeightsView;
     private BaseReceiver baseReceiver; //приёмник намерений
     //private Settings settings;
-    private long entryID;
+    //private long entryID;
     private int shutterSound, shutterSound3;
     private int deltaStab, capture;
     private double grab, grab_virtual,auto,loading;
@@ -89,7 +100,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     private static final String ARG_TIME = "time";
     private static final String ARG_ID = "_id";
     private STAGE stage = STAGE.START;
-    private String _id = null;
+    //private String _id = null;
     private static final String TAG = FragmentInvoice.class.getName();
     private boolean stable;
     private boolean switch_loading, switch_closing;
@@ -116,14 +127,14 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
      * @param _id Parameter 2.
      * @return A new instance of fragment InvoiceFragment.
      */
-    public static FragmentInvoice newInstance(String date, String time, String _id) {
+    public static FragmentInvoice newInstance(String date, String time, long _id) {
         FragmentInvoice fragment = new FragmentInvoice();
         Bundle args = new Bundle();
         args.putString(ARG_DATE, date);
         args.putString(ARG_TIME, time);
-        if(_id != null){
-            args.putString(ARG_ID, _id);
-        }
+        //if(_id != null){
+            args.putLong(ARG_ID, _id);
+        //}
         fragment.setArguments(args);
         return fragment;
     }
@@ -149,36 +160,46 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         if (getArguments() != null) {
             //values.put(InvoiceTable.KEY_DATE_CREATE, getArguments().getString(ARG_DATE));
             //values.put(InvoiceTable.KEY_TIME_CREATE, getArguments().getString(ARG_TIME));
-            values.setDateCreate(getArguments().getString(ARG_DATE));
-            values.setTimeCreate(getArguments().getString(ARG_TIME));
-            _id = getArguments().getString(ARG_ID);
+            invoice.setDateCreate(getArguments().getString(ARG_DATE));
+            invoice.setTimeCreate(getArguments().getString(ARG_TIME));
+            invoice.setId(getArguments().getLong(ARG_ID)); //= getArguments().getString(ARG_ID);
         }else {
             //values.put(InvoiceTable.KEY_DATE_CREATE, new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
             //values.put(InvoiceTable.KEY_TIME_CREATE, new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
             //values.put(InvoiceDao.Properties.DateCreate.columnName, new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
             //values.put(InvoiceDao.Properties.TimeCreate.columnName, new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
-            values.setDateCreate(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
-            values.setTimeCreate(new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+            invoice.setDateCreate(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date()));
+            invoice.setTimeCreate(new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
         }
         vibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
         //settings = new Settings(getActivity()/*, ActivityTest.SETTINGS*/);
 
         //invoiceTable = new InvoiceTable(getActivity());
-        daoSession = ((Main)getActivity().getApplication()).getDaoSession();
-        if (_id == null){
+        //daoSession = ((Main)getActivity().getApplication()).getDaoSession();
+        boxStore = ((Main)getActivity().getApplication()).getBoxStore();
+        invoiceBox = boxStore.boxFor(Invoice.class);
+        weighingBox = boxStore.boxFor(Weighing.class);
+        boxStore.subscribe(Weighing.class).observer(new DataObserver<Class<Weighing>>() {
+            @Override
+            public void onData(Class<Weighing> data) {
+                adapterWeightingList.notifyDataSetChanged();
+            }
+        });
+        if (invoice.getId() == null){
             //entryID = Integer.valueOf(invoiceTable.insertNewEntry(values).getLastPathSegment());
-            entryID = daoSession.getInvoiceDao().insert(values);
-        }else {
-            entryID = Long.valueOf(_id);
+            //entryID = daoSession.getInvoiceDao().insert(values);
+            boxStore.boxFor(Invoice.class).put(invoice);
+        }/*else {
+            Long.valueOf(_id);
         }
 
         try {
             //values = invoiceTable.getValuesItem(entryID);
-            values = daoSession.getInvoiceDao().loadByRowId(entryID);
+            values = daoSession.getInvoiceDao().load(entryID);
             //values = Invoice.getValuesItem(daoSession.getInvoiceDao(), entryID);
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
-        }
+        }*/
 
         //weighingTable = new WeighingTable(getActivity());
 
@@ -213,12 +234,12 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         dateInvoice = view.findViewById(R.id.invoiceDate);
         //dateInvoice.setText(values.getAsString(InvoiceTable.KEY_DATE_CREATE));
         //dateInvoice.append(' ' +values.getAsString(InvoiceTable.KEY_TIME_CREATE));
-        dateInvoice.setText(values.getDateCreate());
-        dateInvoice.append(' ' +values.getTimeCreate());
+        dateInvoice.setText(invoice.getDateCreate());
+        dateInvoice.append(' ' +invoice.getTimeCreate());
 
         nameInvoice = view.findViewById(R.id.invoiceName);
         //nameInvoice.setText(values.getAsString(InvoiceTable.KEY_NAME_AUTO));
-        nameInvoice.setText(values.getNameAuto());
+        nameInvoice.setText(invoice.getNameAuto());
         nameInvoice.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -235,8 +256,9 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                 if (!editable.toString().isEmpty()) {
                     //values.put(InvoiceTable.KEY_NAME_AUTO, editable.toString());
                     //invoiceTable.updateEntry(entryID, values);
-                    values.setNameAuto(editable.toString());
-                    values.update();
+                    invoice.setNameAuto(editable.toString());
+                    invoiceBox.put(invoice);
+                    //boxStore.boxFor(Invoice.class).put(invoice);
                 }
             }
         });
@@ -265,11 +287,11 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             }
         });
 
-        listInvoice = view.findViewById(R.id.invoiceList);
+        listWeightsView = view.findViewById(R.id.weightsList);
         updateListWeight();
         totalInvoice = view.findViewById(R.id.invoiceTotal);
         //totalInvoice.setText(values.getAsString(InvoiceTable.KEY_TOTAL_WEIGHT));
-        totalInvoice.setText(String.valueOf(values.getTotalWeight()));
+        totalInvoice.setText(String.valueOf(invoice.getTotalWeight()));
 
         buttonClosed = view.findViewById(R.id.buttonCloseInvoice);
         buttonClosed.setOnClickListener(this);
@@ -330,7 +352,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                         switch (button){
                             case OK:
                                 //values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
-                                values.setIsReady(true);
+                                invoice.setIsReady(true);
                             break;
                             default:{}
                         }
@@ -356,7 +378,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     /** Закрыть накладную. */
     private void onClose() {
         //invoiceTable.updateEntry(entryID, values);
-        values.update();
+        invoiceBox.put(invoice);
         ((ActivityMain)Objects.requireNonNull(getActivity())).closedFragmentInvoice();
     }
 
@@ -416,11 +438,11 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         auto-= weight;
         //values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
         //invoiceTable.updateEntry(entryID, values);
-        values.setTotalWeight(auto);
-        values.update();
+        invoice.setTotalWeight(auto);
+        invoiceBox.put(invoice);
         updateTotal(auto);
         //weighingTable.removeEntry(id);
-        daoSession.getWeighingDao().loadByRowId(id).delete();
+        weighingBox.remove(id);
     }
 
     private void addRowWeight(double weight){
@@ -429,12 +451,12 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         //values.put(InvoiceTable.KEY_TOTAL_WEIGHT, auto);
         //weighingTable.insertNewEntry(entryID, weight);
         //invoiceTable.updateEntry(entryID, values);
-        values.setTotalWeight(auto);
-        values.update();
+        invoice.setTotalWeight(auto);
+        invoiceBox.put(invoice);
         Weighing weighing = new Weighing();
-        weighing.setIdInvoice(entryID);
+        weighing.setIdInvoice(invoice.getId());
         weighing.setWeight(weight);
-        daoSession.getWeighingDao().insert(weighing);
+        weighingBox.put(weighing);
         updateTotal(auto);
     }
 
@@ -450,19 +472,23 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     /** Обновляем данные листа загрузок. */
     private void updateListWeight() {
         //Cursor cursor = weighingTable.getEntryInvoice(entryID);
-        Cursor cursor = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).buildCursor().query();
-        List<Weighing> weighings = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).build().list();
-        if (cursor == null) {return;}
+        //Cursor cursor = daoSession.getWeighingDao().queryBuilder().where(Weighing_.idInvoice.eq(entryID)).build().find();
+        //List<Weighing> weighings = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).build().list();
+        weighingList = weighingBox.find(Weighing_.idInvoice, invoice.getId());
+        weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find();
+        if (weighingList == null) {return;}
+        adapterWeightingList = new WeightsAdapter(weighingList, getLayoutInflater(), this);
+        listWeightsView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        int[] to = {R.id.bottomText, R.id.topText};
+        //int[] to = {R.id.bottomText, R.id.topText};
 
         //adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, WeighingTable.COLUMN_FOR_INVOICE, to, CursorAdapter.FLAG_AUTO_REQUERY);
-        adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, new String[]{WeighingDao.Properties.DateTimeCreate.columnName,WeighingDao.Properties.Weight.columnName}, to, CursorAdapter.FLAG_AUTO_REQUERY);
+        //adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, new String[]{WeighingDao.Properties.DateTimeCreate.columnName,WeighingDao.Properties.Weight.columnName}, to, CursorAdapter.FLAG_AUTO_REQUERY);
         //namesAdapter = new MyCursorAdapter(this, R.layout.item_check, cursor, columns, to);
         //adapterWeightingList.setViewBinder(new ListWeightViewBinder());
-        listInvoice.setItemsCanFocus(false);
-        listInvoice.setAdapter(adapterWeightingList);
-        listInvoice.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        //listWeightsView.setItemsCanFocus(false);
+        listWeightsView.setAdapter(adapterWeightingList);
+        /*listWeightsView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, final long l) {
                 TextView textView = view.findViewById(R.id.topText);
@@ -487,7 +513,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                 builder.create().show();
                 return true;
             }
-        });
+        });*/
     }
 
     /** Процесс обработки стадий загрузки.
@@ -548,7 +574,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                 //soundPool.play(shutterSound, 1f, 1f, 0, 0, 1);
                 if (switch_closing){
                     //values.put(InvoiceTable.KEY_IS_READY, InvoiceTable.READY);
-                    values.setIsReady(true);
+                    invoice.setIsReady(true);
                     onCloseForDialog(false);
                 }
                 vibrator.vibrate(50);
@@ -663,5 +689,96 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         ObjectScales obj = new ObjectScales();
         obj.setWeight(Double.valueOf(event.weight));
         doProcess(obj);
+    }
+
+    public class WeightsAdapter extends RecyclerView.Adapter<WeightsAdapter.WeightHolder> {
+
+        private List<Weighing> weighingList;
+        private LayoutInflater mInflater;
+        private Fragment mFragment;
+
+        public WeightsAdapter(List<Weighing> list, LayoutInflater inflater, Fragment fragment) {
+            weighingList = list;
+            mInflater = inflater;
+            mFragment = fragment;
+        }
+
+        @Override
+        public WeightHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = mInflater.inflate(R.layout.list_item_weight, parent, false);
+            return new WeightHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(WeightHolder holder, int position) {
+            Weighing weighing = weighingList.get(position);
+            holder.bindWeight(weighing);
+        }
+
+        @Override
+        public int getItemCount() {
+            return weighingList.size();
+        }
+
+        public void setWeights(List<Weighing> list) {
+            weighingList = list;
+            notifyDataSetChanged();
+        }
+
+        class WeightHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+
+            private TextView mDateTime;
+            private TextView mWeight;
+            private Weighing weighing;
+
+
+            public WeightHolder(View itemView) {
+                super(itemView);
+                mDateTime = itemView.findViewById(R.id.bottomText);
+                mWeight = itemView.findViewById(R.id.topText);
+                itemView.setOnClickListener(this);
+
+            }
+
+            public void bindWeight(Weighing weighing) {
+                this.weighing = weighing;
+                mDateTime.setText(weighing.getDateTimeCreate());
+                mWeight.setText(String.valueOf(weighing.getWeight()));
+            }
+
+            @Override
+            public void onClick(View view) {
+                Weighing w = weighingList.get(getLayoutPosition());
+                Long catId = w.getId();
+                //((MainActivity)mAppCompatActivity).getCatDao().deleteByKey(catId);
+                //((MainActivity)mAppCompatActivity).updateCats();
+            }
+
+
+            @Override
+            public boolean onLongClick(View v) {
+                TextView textView = v.findViewById(R.id.topText);
+                final int weight = Integer.valueOf(textView.getText().toString());
+                AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.CustomAlertDialogInvoice));
+                builder.setCancelable(false)
+                        .setTitle("Сообщение")
+                        .setMessage("ВЫ ХОТИТЕ УДАЛИТЬ ЗАПИСЬ?")
+                        .setIcon(R.drawable.ic_notification)
+                        .setPositiveButton("ДА", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                removeRowWeight(weight, getLayoutPosition());
+                            }
+                        })
+                        .setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.dismiss();
+                            }
+                        });
+                builder.create().show();
+                return true;
+            }
+        }
     }
 }
