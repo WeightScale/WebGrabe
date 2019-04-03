@@ -16,6 +16,8 @@ import android.graphics.Rect;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.support.v4.app.DialogFragment;
@@ -182,7 +184,14 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         boxStore.subscribe(Weighing.class).observer(new DataObserver<Class<Weighing>>() {
             @Override
             public void onData(Class<Weighing> data) {
-                adapterWeightingList.notifyDataSetChanged();
+                weighingList = weighingBox.find(Weighing_.idInvoice, invoice.getId());
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapterWeightingList.setWeights(weighingList);
+                    }
+                });
+                //adapterWeightingList.notifyDataSetChanged();
             }
         });
         if (invoice.getId() == null){
@@ -331,7 +340,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         soundPool.unload(shutterSound3);
         soundPool.release();
         soundPool = null;
-        getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Objects.requireNonNull(getActivity()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //wakeLock.release();
     }
 
@@ -475,13 +484,12 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         //Cursor cursor = daoSession.getWeighingDao().queryBuilder().where(Weighing_.idInvoice.eq(entryID)).build().find();
         //List<Weighing> weighings = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).build().list();
         weighingList = weighingBox.find(Weighing_.idInvoice, invoice.getId());
-        weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find();
+        //weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find();
         if (weighingList == null) {return;}
         adapterWeightingList = new WeightsAdapter(weighingList, getLayoutInflater(), this);
         listWeightsView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         //int[] to = {R.id.bottomText, R.id.topText};
-
         //adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, WeighingTable.COLUMN_FOR_INVOICE, to, CursorAdapter.FLAG_AUTO_REQUERY);
         //adapterWeightingList = new SimpleCursorAdapter(getActivity(), R.layout.list_item_weight, cursor, new String[]{WeighingDao.Properties.DateTimeCreate.columnName,WeighingDao.Properties.Weight.columnName}, to, CursorAdapter.FLAG_AUTO_REQUERY);
         //namesAdapter = new MyCursorAdapter(this, R.layout.item_check, cursor, columns, to);
@@ -737,6 +745,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                 mDateTime = itemView.findViewById(R.id.bottomText);
                 mWeight = itemView.findViewById(R.id.topText);
                 itemView.setOnClickListener(this);
+                itemView.setOnLongClickListener(this);
 
             }
 
@@ -758,7 +767,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             @Override
             public boolean onLongClick(View v) {
                 TextView textView = v.findViewById(R.id.topText);
-                final int weight = Integer.valueOf(textView.getText().toString());
+                double d = Double.parseDouble(textView.getText().toString());
+                final int weight = (int)d;
                 AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.CustomAlertDialogInvoice));
                 builder.setCancelable(false)
                         .setTitle("Сообщение")
@@ -767,7 +777,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
                         .setPositiveButton("ДА", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                removeRowWeight(weight, getLayoutPosition());
+                                Long weighingId = weighingList.get(getLayoutPosition()).getId();
+                                removeRowWeight(weight, weighingId);
                             }
                         })
                         .setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {

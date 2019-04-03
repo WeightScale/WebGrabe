@@ -23,6 +23,7 @@ public abstract class Commands {
     InetAddress hostAddress;
     public static final ClassWT WT = new ClassWT();
     static ClassSWT SWT;
+    static ClassOVL OVL;
     public static ClassTP TP = new ClassTP();
     abstract void getParam();
 
@@ -31,7 +32,9 @@ public abstract class Commands {
         @SerializedName("cmd")
         public String command;
         @SerializedName("w")
-        public String weight;
+        public double weight;
+        @SerializedName("a")
+        public int accuracy;
         @SerializedName("c")
         public int charge;
         @SerializedName("s")
@@ -51,6 +54,14 @@ public abstract class Commands {
         String time;
         @SerializedName("v")
         public double weight;
+    }
+
+    /** Класс комманды превышен предел взвешивания */
+    public class ClassOVL{
+        @SerializedName("cmd")
+        String command;
+        @SerializedName("c")
+        public int charge;
     }
 
     /** Класс комманда сбросить в ноль */

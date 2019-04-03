@@ -18,11 +18,15 @@ import android.view.ViewGroup;
 import com.kostya.webgrabe.provider.Invoice;
 import com.kostya.webgrabe.provider.Invoice_;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import io.objectbox.BoxStore;
 import io.objectbox.query.Query;
@@ -57,7 +61,25 @@ public class ActivityArchive extends AppCompatActivity {
         //invoiceTable = new InvoiceTable(this);
         //Cursor cursor = invoiceTable.getAllGroupDate();
         List<Invoice> invoices = query.find();
-        if (invoices == null) {return;}
+        Map<String, Double> counting = new HashMap<>();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            counting = invoices.stream().collect(Collectors.groupingBy(Invoice::getDateCreate, Collectors.summingDouble(Invoice::getTotalWeight)));
+        }else {
+            Iterator<Invoice> inv = invoices.iterator();
+
+            while (inv.hasNext()){
+                Invoice i = inv.next();
+                String date = i.getDateCreate();
+                double sum = i.getTotalWeight();
+                if(counting.containsKey(date)){
+                    double s = counting.get(date);
+                    sum +=s;
+                    //counting.remove(date);
+                }
+                counting.put(date,sum);
+            }
+        }
+        Map<String, Double> treeMap = new TreeMap<>(counting);
         //cursor.moveToFirst();
         if (invoices.size() == 0){
             findViewById(R.id.archive_empty).setVisibility(View.VISIBLE);

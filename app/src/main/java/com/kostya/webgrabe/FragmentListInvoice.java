@@ -9,6 +9,7 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
@@ -43,6 +44,7 @@ import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.BoxStore;
+import io.objectbox.reactive.DataObserver;
 
 /**
  * @author Kostya on 10.12.2016.
@@ -81,6 +83,19 @@ public class FragmentListInvoice extends Fragment {
         //daoSession = ((Main)getActivity().getApplication()).getDaoSession();
         boxStore = ((Main)getActivity().getApplication()).getBoxStore();
         invoiceBox = boxStore.boxFor(Invoice.class);
+        boxStore.subscribe(Invoice.class).observer(new DataObserver<Class<Invoice>>() {
+            @Override
+            public void onData(Class<Invoice> data) {
+                invoiceList = invoiceBox.query().equal(Invoice_.dateCreate, date).build().find();
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        invoicesAdapter.setInvoices(invoiceList);
+                    }
+                });
+                //adapterWeightingList.notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
@@ -261,7 +276,7 @@ public class FragmentListInvoice extends Fragment {
             return invoiceList.size();
         }
 
-        public void setCats(List<Invoice> list) {
+        public void setInvoices(List<Invoice> list) {
             invoiceList = list;
             notifyDataSetChanged();
         }

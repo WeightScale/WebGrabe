@@ -29,6 +29,6 @@ dependencies {
     //implementation 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
     implementation 'com.neovisionaries:nv-websocket-client:2.6'
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation 'org.greenrobot:eventbus:3.1.1'
     //implementation 'com.jakewharton:butterknife:6.0.0'
 }

@@ -71,7 +71,7 @@ public class IntentServiceGoogleForm extends IntentService {
     private Internet internet;
     private NotificationManager notificationManager;
     //private Toast toast;
-    public static final String filePath = "forms/kolosok.xml";
+    public static final String filePath = "forms/form.xml";
     private static final String nameForm = "EventsForm";
     private static final String TAG = IntentServiceGoogleForm.class.getName();
     private static final String EXTRA_LIST_VALUE_PAIR = "com.kostya.scaleswifinet.task.EXTRA_LIST_VALUE_PAIR";

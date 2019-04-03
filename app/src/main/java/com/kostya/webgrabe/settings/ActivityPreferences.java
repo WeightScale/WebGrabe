@@ -14,12 +14,14 @@ import android.widget.Toast;
 
 import com.google.common.io.ByteStreams;
 import com.kostya.webgrabe.ActivityAbout;
+import com.kostya.webgrabe.FileSelector;
 import com.kostya.webgrabe.Globals;
 import com.kostya.webgrabe.R;
 import com.kostya.webgrabe.filedialog.FileChooserDialog;
 import com.kostya.webscaleslibrary.module.Module;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Objects;
@@ -168,11 +170,46 @@ public class ActivityPreferences extends PreferenceActivity {
                 name.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        showFileChooser(preference.getContext());
+                        //showFileChooser(preference.getContext());
+                        showChooser(preference.getContext());
                         return false;
                     }
                 });
             }
+            void showChooser(Context context){
+                FileSelector file = new FileSelector((Activity)context).setFileListener(new FileSelector.FileSelectedListener() {
+                    @Override
+                    public void fileSelected(File file) {
+                        Uri uri = Uri.fromFile(file);
+                        /* Создаем фаил с именем . */
+                        File storeFile = new File(Globals.getInstance().pathLocalForms, "form.xml");
+                        try {
+                            /* Создаем поток для записи фаила в папку хранения. */
+                            FileOutputStream fileOutputStream = new FileOutputStream(storeFile);
+                            InputStream inputStream = context.getContentResolver().openInputStream(uri);
+                            //InputStream inputStream = new FileInputStream(file);
+                            /* Получаем байты данных. */
+                            byte[] bytes = ByteStreams.toByteArray(Objects.requireNonNull(inputStream));
+                            inputStream.close();
+                            /* Записываем фаил в папку. */
+                            fileOutputStream.write(bytes);
+                            /* Закрываем поток. */
+                            fileOutputStream.close();
+                            Toast.makeText(context, "Фаил сохранен " + file.getPath(),  Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toast.makeText(context, "Ошибка выбора файла " + e.getMessage(),  Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+                file.showDialog();
+            }
+            /*void showChooser(Context context) {
+                new FileSelector((Activity)context).setFileListener(new FileSelector.FileSelectedListener() {
+                    @Override public void fileSelected(final File file) {
+                        // do something with the file
+                    }).showDialog();
+            };*/
+
             void showFileChooser(Context context) {
                 FileChooserDialog dialog = new FileChooserDialog(context);
                 dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {

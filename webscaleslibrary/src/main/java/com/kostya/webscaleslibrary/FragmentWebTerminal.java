@@ -38,6 +38,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 
 /**
@@ -149,7 +150,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         super.onResume();
         EventBus.getDefault().register(this);
         if (webScalesClient.isConnected()){
-            startCheckGetWeight();
+            //startCheckGetWeight();
         }
         //try {scaleModule.scalesProcessEnable(true);}catch (Exception e){}
 
@@ -499,7 +500,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     }
 
     private void startCheckGetWeight() {
-        Commands.WT.getParam();
+        //Commands.WT.getParam();
         handler.postDelayed(checkGetWeightRunable, 5000);
     }
 
@@ -511,7 +512,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         @Override
         public void run() {
             weightTextView.setText(String.valueOf("--"));
-            startCheckGetWeight();
+            //startCheckGetWeight();
         }
     };
 
@@ -521,7 +522,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         text.setSpan(new TextAppearanceSpan(getActivity(), R.style.SpanTextKgMini),0,text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         weightTextView.setText(text, TextView.BufferType.SPANNABLE);
         if(eventSocket.message == Client.MessageEventSocket.Message.CONNECT){
-            startCheckGetWeight();
+            //startCheckGetWeight();
         }
         //Log.i("Event", eventSocket.text);
     }
@@ -530,48 +531,62 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         return String.format("%." + precision + "f", amt);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.ASYNC)
     public void onEvent(Commands.ClassWT event){
-        stopCheckGetWeight();
-        //handler.removeCallbacks(checkGetWeightRunable);
-        //moduleWeight = event.weight;
-        //final String textWeight = setPrecision(moduleWeight, 3);
-        /* Обновляем прогресс стабилизации веса. */
-        progressBarStable.setProgress(Module.STABLE_NUM_MAX - event.stable);                          //todo
-        SpannableStringBuilder w = new SpannableStringBuilder(event.weight);
-        w.setSpan(new ForegroundColorSpan(Color.WHITE), 0, w.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        w.append(textKg);
-        weightTextView.setText(w, TextView.BufferType.SPANNABLE);
-        if(battery != event.charge){
-            battery = event.charge;
-            textViewBattery.setText(event.charge + "%");
-            textViewBattery.setTextColor(Color.WHITE);
-            if (event.charge > 90) {
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_full, 0, 0, 0);
-            } else if (event.charge > 80){
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_90, 0, 0, 0);
-            } else if (event.charge > 60){
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_80, 0, 0, 0);
-            } else if (event.charge > 50){
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_60, 0, 0, 0);
-            } else if (event.charge > 30){
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_50, 0, 0, 0);
-            } else if (event.charge > 20){
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_30, 0, 0, 0);
-            } else if (event.charge >= 0) {
-                //textViewBattery.setText(obj.getBattery() + "%");
-                textViewBattery.setTextColor(Color.RED);
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
-            }else {
-                textViewBattery.setText("нет данных!!!");
-                textViewBattery.setTextColor(Color.BLUE);
-                textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
-            }
-        }
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                //stopCheckGetWeight();
+                //handler.removeCallbacks(checkGetWeightRunable);
+                moduleWeight = event.weight;
+                //final String textWeight = setPrecision(moduleWeight, 3);
+                /* Обновляем прогресс стабилизации веса. */
+                progressBarStable.setProgress(Module.STABLE_NUM_MAX - event.stable);                          //todo
+                BigDecimal decimal = new BigDecimal(event.weight);
+                SpannableStringBuilder w = new SpannableStringBuilder(decimal.setScale(event.accuracy,BigDecimal.ROUND_HALF_UP).toPlainString());
+                w.setSpan(new ForegroundColorSpan(Color.WHITE), 0, w.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                w.append(textKg);
+                weightTextView.setText(w, TextView.BufferType.SPANNABLE);
+                if(battery != event.charge){
+                    battery = event.charge;
+                    textViewBattery.setText(event.charge + "%");
+                    textViewBattery.setTextColor(Color.WHITE);
+                    if (event.charge > 90) {
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_full, 0, 0, 0);
+                    } else if (event.charge > 80){
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_90, 0, 0, 0);
+                    } else if (event.charge > 60){
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_80, 0, 0, 0);
+                    } else if (event.charge > 50){
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_60, 0, 0, 0);
+                    } else if (event.charge > 30){
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_50, 0, 0, 0);
+                    } else if (event.charge > 20){
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_30, 0, 0, 0);
+                    } else if (event.charge >= 0) {
+                        //textViewBattery.setText(obj.getBattery() + "%");
+                        textViewBattery.setTextColor(Color.RED);
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
+                    }else {
+                        textViewBattery.setText("нет данных!!!");
+                        textViewBattery.setTextColor(Color.BLUE);
+                        textViewBattery.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_battery_20, 0, 0, 0);
+                    }
+                }
 
-        try {Thread.sleep(10);} catch (InterruptedException e) {}
-        startCheckGetWeight();
+                //try {Thread.sleep(10);} catch (InterruptedException e) {}
+                //startCheckGetWeight();
+            }
+        });
+
         //handler.postDelayed(checkGetWeightRunable, 5000);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(Commands.ClassOVL event){
+        SpannableStringBuilder text = new SpannableStringBuilder(String.valueOf("перегруз!!!"));
+        text.setSpan(new TextAppearanceSpan(getActivity(), R.style.SpanTextKg),0,text.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        weightTextView.setText(text, TextView.BufferType.SPANNABLE);
     }
 
 
