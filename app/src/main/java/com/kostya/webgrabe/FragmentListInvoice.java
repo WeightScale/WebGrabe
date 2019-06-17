@@ -3,16 +3,11 @@ package com.kostya.webgrabe;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.database.DataSetObserver;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.ListFragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
@@ -22,10 +17,7 @@ import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.CursorAdapter;
 import android.widget.ImageView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.ads.AdRequest;
@@ -54,9 +46,9 @@ public class FragmentListInvoice extends Fragment {
     private RecyclerView listInvoiceView;
     //private InvoiceTable invoiceTable;
     //DaoSession daoSession;
-    BoxStore boxStore;
-    Box<Invoice> invoiceBox;
-    List<Invoice> invoiceList;
+    private BoxStore boxStore;
+    private Box<Invoice> invoiceBox;
+    private List<Invoice> invoiceList;
     private String date;
     private static final String ARG_DATE = "arg_date";
 
@@ -81,7 +73,7 @@ public class FragmentListInvoice extends Fragment {
         }
         //invoiceTable = new InvoiceTable(getActivity());
         //daoSession = ((Main)getActivity().getApplication()).getDaoSession();
-        boxStore = ((Main)getActivity().getApplication()).getBoxStore();
+        boxStore = ((Main) Objects.requireNonNull(getActivity()).getApplication()).getBoxStore();
         invoiceBox = boxStore.boxFor(Invoice.class);
         boxStore.subscribe(Invoice.class).observer(new DataObserver<Class<Invoice>>() {
             @Override
@@ -137,7 +129,6 @@ public class FragmentListInvoice extends Fragment {
         invoiceList = invoiceBox.query().equal(Invoice_.dateCreate, date).build().find();
         //Cursor crs = daoSession.getInvoiceDao().queryBuilder().where(InvoiceDao.Properties.DateCreate.eq(date)).buildCursor().query();
 
-        if (invoiceList == null) { return; }
         //int[] to = {R.id.id_row, R.id.date_row, R.id.number_row, R.id.weight_row, R.id.imageReady};
         //String[] column = {InvoiceTable.KEY_ID,InvoiceTable.KEY_DATE_CREATE,InvoiceTable.KEY_NAME_AUTO,InvoiceTable.KEY_TOTAL_WEIGHT, InvoiceTable.KEY_IS_READY};
         /*String[] column = {InvoiceDao.Properties.Id.columnName,
@@ -250,10 +241,10 @@ public class FragmentListInvoice extends Fragment {
     public class InvoicesAdapter extends RecyclerView.Adapter<InvoicesAdapter.InvoiceHolder> {
 
         private List<Invoice> invoiceList;
-        private LayoutInflater mInflater;
-        private Fragment mFragment;
+        private final LayoutInflater mInflater;
+        private final Fragment mFragment;
 
-        public InvoicesAdapter(List<Invoice> list, LayoutInflater inflater, Fragment fragment) {
+        InvoicesAdapter(List<Invoice> list, LayoutInflater inflater, Fragment fragment) {
             invoiceList = list;
             mInflater = inflater;
             mFragment = fragment;
@@ -276,22 +267,22 @@ public class FragmentListInvoice extends Fragment {
             return invoiceList.size();
         }
 
-        public void setInvoices(List<Invoice> list) {
+        void setInvoices(List<Invoice> list) {
             invoiceList = list;
             notifyDataSetChanged();
         }
 
         class InvoiceHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-            private TextView mId;
-            private TextView mDate;
-            private TextView mNumber;
-            private TextView mWeight;
-            private ImageView mImageReady;
+            private final TextView mId;
+            private final TextView mDate;
+            private final TextView mNumber;
+            private final TextView mWeight;
+            private final ImageView mImageReady;
             private Invoice mInvoice;
 
 
-            public InvoiceHolder(View itemView) {
+            InvoiceHolder(View itemView) {
                 super(itemView);
                 mId = itemView.findViewById(R.id.id_row);
                 mDate = itemView.findViewById(R.id.date_row);
@@ -301,7 +292,7 @@ public class FragmentListInvoice extends Fragment {
                 itemView.setOnClickListener(this);
             }
 
-            public void bindInvoice(Invoice invoice) {
+            void bindInvoice(Invoice invoice) {
                 mInvoice = invoice;
                 mId.setText(String.valueOf(invoice.getId()));
                 mDate.setText(invoice.getDateCreate());
@@ -335,47 +326,45 @@ public class FragmentListInvoice extends Fragment {
 
                 //Cursor cursor = invoiceTable.getEntryItem((int)l, InvoiceTable.KEY_IS_READY,InvoiceTable.KEY_TOTAL_WEIGHT);
                 //Invoice invoice = daoSession.getInvoiceDao().loadByRowId(l);
-                if (invoice != null){
-                    //int isReady = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_IS_READY));
-                    boolean isReady = invoice.getIsReady();
-                    //int totalWeight = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
-                    double totalWeight = invoice.getTotalWeight();
-                    //if (isReady != InvoiceTable.READY || totalWeight == 0){
-                    if (!isReady || totalWeight == 0){
-                        if (totalWeight == 0){
-                            AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.CustomAlertDialogInvoice));
-                            builder.setCancelable(false)
-                                    .setTitle("Сообщение")
-                                    .setMessage("НАКЛАДНАЯ" + " №" + invoice.getId())
-                                    .setIcon(R.drawable.ic_notification)
-                                    .setPositiveButton("УДАЛИТЬ", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            //invoiceTable.removeEntry((int)l);
-                                            //daoSession.getInvoiceDao().loadByRowId(l).delete();
+                //int isReady = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_IS_READY));
+                boolean isReady = invoice.getIsReady();
+                //int totalWeight = cursor.getInt(cursor.getColumnIndex(InvoiceTable.KEY_TOTAL_WEIGHT));
+                double totalWeight = invoice.getTotalWeight();
+                //if (isReady != InvoiceTable.READY || totalWeight == 0){
+                if (!isReady || totalWeight == 0){
+                    if (totalWeight == 0){
+                        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), R.style.CustomAlertDialogInvoice));
+                        builder.setCancelable(false)
+                                .setTitle("Сообщение")
+                                .setMessage("НАКЛАДНАЯ" + " №" + invoice.getId())
+                                .setIcon(R.drawable.ic_notification)
+                                .setPositiveButton("УДАЛИТЬ", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        //invoiceTable.removeEntry((int)l);
+                                        //daoSession.getInvoiceDao().loadByRowId(l).delete();
 
-                                            //new WeighingTable(getActivity()).removeEntryInvoice((int) l);
-                                            //List<Weighing> weighingList = daoSession.getWeighingDao().queryBuilder().list();
-                                            boxStore.boxFor(Weighing.class).query().equal(Weighing_.idInvoice, invoice.getId()).build().remove();
-                                            invoiceBox.remove(invoice);
-                                            //simpleCursorAdapter.notifyDataSetChanged();
-                                            //daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(l)).build().unique().delete();
-                                        }
-                                    })
-                                    .setNegativeButton("ОТКРЫТЬ", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            dialog.dismiss();
-                                            openInvoice(invoice.getId());
-                                        }
-                                    });
-                            builder.create().show();
-                        }else {
-                            openInvoice(invoice.getId());
-                        }
+                                        //new WeighingTable(getActivity()).removeEntryInvoice((int) l);
+                                        //List<Weighing> weighingList = daoSession.getWeighingDao().queryBuilder().list();
+                                        boxStore.boxFor(Weighing.class).query().equal(Weighing_.idInvoice, invoice.getId()).build().remove();
+                                        invoiceBox.remove(invoice);
+                                        //simpleCursorAdapter.notifyDataSetChanged();
+                                        //daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(l)).build().unique().delete();
+                                    }
+                                })
+                                .setNegativeButton("ОТКРЫТЬ", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        dialog.dismiss();
+                                        openInvoice(invoice.getId());
+                                    }
+                                });
+                        builder.create().show();
                     }else {
-                        getActivity().startService(new Intent(getActivity(), IntentServiceGoogleForm.class).setAction(IntentServiceGoogleForm.ACTION_EVENT_TABLE));
+                        openInvoice(invoice.getId());
                     }
+                }else {
+                    Objects.requireNonNull(getActivity()).startService(new Intent(getActivity(), IntentServiceGoogleForm.class).setAction(IntentServiceGoogleForm.ACTION_EVENT_TABLE));
                 }
             }
         }

@@ -32,7 +32,7 @@
             </PreferenceCategory>
         </PreferenceScreen>
         <Preference android:title="УСТАНОВКИ ВЕСОВ" android:summary="Настройки весов (калибровка ...)" android:key="@string/KEY_SCALES"
-                    android:icon="@drawable/ic_settings_admin"/>
+                    android:icon="@drawable/ic_settings_general"/>
         <Preference android:title="ФАИЛ ФОРМЫ GOOGLE" android:summary="Загрузить фаил формы настроек. Получите фаил у администратора." android:key="@string/KEY_PATH_FORM"
                     android:icon="@drawable/ic_folder_24dp"
                     android:shouldDisableView="false"/>

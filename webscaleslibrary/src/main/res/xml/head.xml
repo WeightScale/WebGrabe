@@ -7,11 +7,11 @@
         android:summary="Настройки сети"
         android:title="Настройки">
     </header><!--android:fragment="com.konst.scaleslibrary.settings.ActivitySettings$FragmentSettingsNet"-->
-    <header android:id="@+id/settingsGeneral"
+    <!--<header android:id="@+id/settingsGeneral"
         android:icon="@drawable/ic_settings_general"
         android:summary="Настройки для опытного пользователя. Требуется пароль."
         android:title="Настройки общии">
-    </header>
+    </header>-->
     <header android:id="@+id/calibrator"
         android:icon="@drawable/ic_build_calibrator"
         android:summary="Калибровка для опытного пользователя. Требуется пароль."

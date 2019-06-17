@@ -39,9 +39,9 @@ public class ActivityProperties extends PreferenceActivity {
 
     @Override
     public void onHeaderClick(Header header, int position) {
-        if (header.id == R.id.settingsGeneral) {
+        /*if (header.id == R.id.settingsGeneral) {
             startDialog(header);
-        }else if (header.id == R.id.settingsNet){
+        }else*/ if (header.id == R.id.settingsNet){
             startPreferencePanel(FragmentSettingsNet.class.getName(), header.fragmentArguments, header.titleRes, header.title, null, 0);
         }else if (header.id == R.id.calibrator){
             startActivity(new Intent(getApplicationContext(), ActivityCalibration.class));
@@ -82,9 +82,9 @@ public class ActivityProperties extends PreferenceActivity {
                             //else if (string.equals(ScalesView.getInstance().getScaleModule().getModuleServiceCod()))
                                 //key = true;
                             if (key){
-                                if (header.id == R.id.settingsGeneral)
+                                /*if (header.id == R.id.settingsGeneral)
                                     startPreferencePanel(FragmentSettingsGeneral.class.getName(), header.fragmentArguments, header.titleRes, header.title, null, 0);
-                                else if(header.id == R.id.calibrator)
+                                else*/ if(header.id == R.id.calibrator)
                                     startPreferencePanel(FragmentCalibrator.class.getName(), header.fragmentArguments, header.titleRes, header.title, null, 0);
                                 finish();
                             }else {

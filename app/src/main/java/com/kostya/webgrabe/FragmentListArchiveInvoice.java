@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import io.objectbox.BoxStore;
 
@@ -34,7 +35,7 @@ public class FragmentListArchiveInvoice extends Fragment {
     private SimpleCursorAdapter simpleCursorAdapter;
     //private InvoiceTable invoiceTable;
     //DaoSession daoSession;
-    BoxStore boxStore;
+    private BoxStore boxStore;
     private TextView dateText, totalWeight;
     private RecyclerView recyclerView;
     //ListView listView;
@@ -66,7 +67,7 @@ public class FragmentListArchiveInvoice extends Fragment {
         }
         //invoiceTable = new InvoiceTable(getActivity());
         //daoSession = ((Main)getActivity().getApplication()).getDaoSession();
-        boxStore = ((Main)getActivity().getApplication()).getBoxStore();
+        boxStore = ((Main) Objects.requireNonNull(getActivity()).getApplication()).getBoxStore();
     }
 
     @Override
@@ -102,7 +103,8 @@ public class FragmentListArchiveInvoice extends Fragment {
     private void updateRecyclerView() {
         //Cursor cursor = invoiceTable.getToday(date);
         //List<Invoice> invoices = daoSession.getInvoiceDao().queryBuilder().where(InvoiceDao.Properties.DateCreate.eq(date)).list();
-        List<Invoice> invoices = boxStore.boxFor(Invoice.class).find(Invoice_.dateCreate, date);
+        //List<Invoice> invoices = boxStore.boxFor(Invoice.class).find(Invoice_.dateCreate, date);
+        List<Invoice> invoices = boxStore.boxFor(Invoice.class).query().equal(Invoice_.dateCreate, date).build().find();
         /*if (cursor == null) {
             return;
         }*/
@@ -267,7 +269,7 @@ public class FragmentListArchiveInvoice extends Fragment {
     protected abstract class CursorRecyclerViewAdapter extends RecyclerView.Adapter<CursorRecyclerViewAdapter.InvoiceHolder> {
 
         private final Context mContext;
-        private List<Invoice> invoiceList;
+        private final List<Invoice> invoiceList;
         private boolean mDataValid;
         //private final int mRowIdColumn;
         private DataSetObserver mDataSetObserver;

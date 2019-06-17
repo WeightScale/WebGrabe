@@ -19,7 +19,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.LogRecord;
 
 
 /**
@@ -60,7 +59,7 @@ public class WifiBaseManager {
      * @param context Контекст программы.
      * @param listener Слушатель событий соединения.
      */
-    public WifiBaseManager(Context context, /*String ssid, String key,*/ OnWifiBaseManagerListener listener){
+    WifiBaseManager(Context context, /*String ssid, String key,*/ OnWifiBaseManagerListener listener){
         this.context = context;
         //pass = key;
         onWifiBaseManagerListener = listener;
@@ -404,7 +403,7 @@ public class WifiBaseManager {
         }
     }
 
-    public void terminate(){
+    void terminate(){
         try {connectionReceiver.unregister();}catch (NullPointerException e){}
         try {supplicantDisconnectReceiver.unregister();}catch (NullPointerException e){}
         baseReceiver.unregister();

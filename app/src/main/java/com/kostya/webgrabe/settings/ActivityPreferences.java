@@ -2,7 +2,6 @@
 package com.kostya.webgrabe.settings;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,14 +13,12 @@ import android.widget.Toast;
 
 import com.google.common.io.ByteStreams;
 import com.kostya.webgrabe.ActivityAbout;
-import com.kostya.webgrabe.FileSelector;
+import com.kostya.webgrabe.filedialog.FileSelector;
 import com.kostya.webgrabe.Globals;
 import com.kostya.webgrabe.R;
-import com.kostya.webgrabe.filedialog.FileChooserDialog;
 import com.kostya.webscaleslibrary.module.Module;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Objects;
@@ -182,7 +179,7 @@ public class ActivityPreferences extends PreferenceActivity {
                     public void fileSelected(File file) {
                         Uri uri = Uri.fromFile(file);
                         /* Создаем фаил с именем . */
-                        File storeFile = new File(Globals.getInstance().pathLocalForms, "form.xml");
+                        File storeFile = new File(Globals.pathLocalForms, "form.xml");
                         try {
                             /* Создаем поток для записи фаила в папку хранения. */
                             FileOutputStream fileOutputStream = new FileOutputStream(storeFile);
@@ -209,62 +206,6 @@ public class ActivityPreferences extends PreferenceActivity {
                         // do something with the file
                     }).showDialog();
             };*/
-
-            void showFileChooser(Context context) {
-                FileChooserDialog dialog = new FileChooserDialog(context);
-                dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
-                    @Override
-                    public void onFileSelected(Dialog source, File file) {
-                        source.hide();
-                        /* Получаем путь к файлу. */
-                        Uri uri = Uri.fromFile(file);
-                        /* Создаем фаил с именем . */
-                        File storeFile = new File(Globals.getInstance().pathLocalForms, "form.xml");
-                        try {
-                            /* Создаем поток для записи фаила в папку хранения. */
-                            FileOutputStream fileOutputStream = new FileOutputStream(storeFile);
-                            InputStream inputStream = source.getContext().getContentResolver().openInputStream(uri);
-                            /* Получаем байты данных. */
-                            byte[] bytes = ByteStreams.toByteArray(Objects.requireNonNull(inputStream));
-                            inputStream.close();
-                            /* Записываем фаил в папку. */
-                            fileOutputStream.write(bytes);
-                            /* Закрываем поток. */
-                            fileOutputStream.close();
-                            Toast.makeText(source.getContext(), "Фаил сохранен " + file.getPath(),  Toast.LENGTH_LONG).show();
-                        } catch (Exception e) {
-                            Toast.makeText(source.getContext(), "Ошибка выбора файла " + e.getMessage(),  Toast.LENGTH_LONG).show();
-                        }
-                        //systemTable.updateEntry(SystemTable.Name.PATH_FORM, uri.toString());
-                    }
-                    @Override
-                    public void onFileSelected(Dialog source, File folder, String name) {
-                        source.hide();
-                        Toast toast = Toast.makeText(source.getContext(), "File created: " + folder.getName() + '/' + name, Toast.LENGTH_LONG);
-                        toast.show();
-                    }
-                });
-                dialog.show();
-                /*Intent intent = new Intent();
-                //intent.setType("**//*//*");
-                //intent.addCategory(Intent.CATEGORY_OPENABLE);
-                if (Build.VERSION.SDK_INT < 19){
-                    intent.setAction(Intent.ACTION_GET_CONTENT);
-
-                    //((Activity)context).startActivityForResult(intent, FILE_SELECT_CODE);
-                } else {
-                    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    //((Activity)context).startActivityForResult(intent, FILE_SELECT_CODE);
-                }
-                intent.setType("**//*//*");
-
-                try {
-                    ((Activity)context).startActivityForResult(Intent.createChooser(intent, "Select a File to Upload"), FILE_SELECT_CODE);
-                } catch (ActivityNotFoundException ex) {
-                    Toast.makeText(context, "Пожалуйста инсталируйте File Manager.",  Toast.LENGTH_LONG).show();
-                }*/
-            }
         },
         ABOUT(R.string.KEY_ABOUT){
             @Override

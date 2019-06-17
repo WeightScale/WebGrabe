@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.graphics.Rect;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -22,7 +21,6 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -31,25 +29,17 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.TextAppearanceSpan;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CursorAdapter;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.kostya.webgrabe.provider.DaoSession;
 import com.kostya.webgrabe.provider.Invoice;
-import com.kostya.webgrabe.provider.Invoice_;
 import com.kostya.webgrabe.provider.Weighing;
-import com.kostya.webgrabe.provider.WeighingDao;
 import com.kostya.webgrabe.provider.Weighing_;
 import com.kostya.webgrabe.scales.InterfaceModule;
 import com.kostya.webscaleslibrary.module.ObjectScales;
@@ -78,15 +68,15 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     private Vibrator vibrator; //вибратор
     private SoundPool soundPool;
     private WeightsAdapter adapterWeightingList;
-    List<Weighing> weighingList;
-    BoxStore boxStore;
-    Box<Invoice> invoiceBox;
-    Box<Weighing> weighingBox;
+    private List<Weighing> weighingList;
+    private BoxStore boxStore;
+    private Box<Invoice> invoiceBox;
+    private Box<Weighing> weighingBox;
     //DaoSession daoSession;
     //private InvoiceTable invoiceTable;
     //private WeighingTable weighingTable;
     //private ContentValues values = new ContentValues();
-    private Invoice invoice = new Invoice();
+    private final Invoice invoice = new Invoice();
     private EditText nameInvoice, loadingInvoice, totalInvoice;
     private TextView dateInvoice,textViewStage, textViewBatch;
     private Button buttonClosed;
@@ -184,7 +174,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         boxStore.subscribe(Weighing.class).observer(new DataObserver<Class<Weighing>>() {
             @Override
             public void onData(Class<Weighing> data) {
-                weighingList = weighingBox.find(Weighing_.idInvoice, invoice.getId());
+                //weighingList = weighingBox.fine(Weighing_.idInvoice, invoice.getId());
+                weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find(); //todo
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
@@ -396,7 +387,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         if (flag){
             DialogFragment fragment = CustomDialogFragment.newInstance(CustomDialogFragment.DIALOG.ALERT_DIALOG2);
             fragment.setTargetFragment(this, REQUEST_CLOSED_INVOICE);
-            fragment.show(getFragmentManager(), fragment.getClass().getName());
+            fragment.show(Objects.requireNonNull(getFragmentManager()), fragment.getClass().getName());
         }else
             onClose();
     }
@@ -483,7 +474,8 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
         //Cursor cursor = weighingTable.getEntryInvoice(entryID);
         //Cursor cursor = daoSession.getWeighingDao().queryBuilder().where(Weighing_.idInvoice.eq(entryID)).build().find();
         //List<Weighing> weighings = daoSession.getWeighingDao().queryBuilder().where(WeighingDao.Properties.IdInvoice.eq(entryID)).build().list();
-        weighingList = weighingBox.find(Weighing_.idInvoice, invoice.getId());
+        //weighingList = weighingBox.find(Weighing._idInvoice, invoice.getId());
+        weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find();
         //weighingList = weighingBox.query().equal(Weighing_.idInvoice, invoice.getId()).build().find();
         if (weighingList == null) {return;}
         adapterWeightingList = new WeightsAdapter(weighingList, getLayoutInflater(), this);
@@ -695,17 +687,17 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(com.kostya.webscaleslibrary.module.Commands.ClassWT event){
         ObjectScales obj = new ObjectScales();
-        obj.setWeight(Double.valueOf(event.weight));
+        obj.setWeight(event.weight);
         doProcess(obj);
     }
 
     public class WeightsAdapter extends RecyclerView.Adapter<WeightsAdapter.WeightHolder> {
 
         private List<Weighing> weighingList;
-        private LayoutInflater mInflater;
-        private Fragment mFragment;
+        private final LayoutInflater mInflater;
+        private final Fragment mFragment;
 
-        public WeightsAdapter(List<Weighing> list, LayoutInflater inflater, Fragment fragment) {
+        WeightsAdapter(List<Weighing> list, LayoutInflater inflater, Fragment fragment) {
             weighingList = list;
             mInflater = inflater;
             mFragment = fragment;
@@ -728,19 +720,19 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
             return weighingList.size();
         }
 
-        public void setWeights(List<Weighing> list) {
+        void setWeights(List<Weighing> list) {
             weighingList = list;
             notifyDataSetChanged();
         }
 
         class WeightHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
-            private TextView mDateTime;
-            private TextView mWeight;
+            private final TextView mDateTime;
+            private final TextView mWeight;
             private Weighing weighing;
 
 
-            public WeightHolder(View itemView) {
+            WeightHolder(View itemView) {
                 super(itemView);
                 mDateTime = itemView.findViewById(R.id.bottomText);
                 mWeight = itemView.findViewById(R.id.topText);
@@ -749,7 +741,7 @@ public class FragmentInvoice extends Fragment implements View.OnClickListener {
 
             }
 
-            public void bindWeight(Weighing weighing) {
+            void bindWeight(Weighing weighing) {
                 this.weighing = weighing;
                 mDateTime.setText(weighing.getDateTimeCreate());
                 mWeight.setText(String.valueOf(weighing.getWeight()));

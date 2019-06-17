@@ -7,7 +7,6 @@ import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
-import com.neovisionaries.ws.client.WebSocketState;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -159,7 +158,7 @@ public class Client{
             ERROR("Ошибка"),
             STATE(""),
             UNEXPECTED("");
-            String message;
+            final String message;
             Message(String message){
                 this.message = message;
             }

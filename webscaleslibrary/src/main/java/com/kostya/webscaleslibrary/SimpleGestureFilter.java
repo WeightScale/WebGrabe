@@ -9,7 +9,7 @@ import android.view.View;
 /*
  * Created by Kostya on 08.03.2015.
  */
-public class SimpleGestureFilter extends SimpleOnGestureListener {
+class SimpleGestureFilter extends SimpleOnGestureListener {
 
     private static final int SWIPE_UP = 1;
     public static final int SWIPE_DOWN = 2;

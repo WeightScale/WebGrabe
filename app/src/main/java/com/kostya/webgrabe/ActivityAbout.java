@@ -133,7 +133,7 @@ public class ActivityAbout extends Activity {
         setupBanner();
     }
 
-    void parserTextSettings(TextView textView){
+    private void parserTextSettings(TextView textView){
         for (STROKE stroke : STROKE.values()){
             try {
                 SpannableStringBuilder text = new SpannableStringBuilder(getString(stroke.getResId()));

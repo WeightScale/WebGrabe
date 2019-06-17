@@ -5,16 +5,16 @@ import com.kostya.webscaleslibrary.R;
 import com.kostya.webscaleslibrary.preferences.Settings;
 
 public abstract class Module implements WifiBaseManager.OnWifiBaseManagerListener{
-    Context mContext;
-    protected WifiBaseManager wifiBaseManager;
-    protected Settings settings;
+    final Context mContext;
+    WifiBaseManager wifiBaseManager;
+    final Settings settings;
     public static String SSID;
     public static String HOST;
     /** Количество стабильных показаний веса для авто сохранения. */
     public static final int STABLE_NUM_MAX = 10;
     public static final String SETTINGS = Module.class.getName() + ".SETTINGS"; //
 
-    public Module(Context context) {
+    Module(Context context) {
         mContext = context;
         settings = new Settings(mContext);
         SSID = settings.read( mContext.getString(R.string.KEY_SSID) , "KONST");

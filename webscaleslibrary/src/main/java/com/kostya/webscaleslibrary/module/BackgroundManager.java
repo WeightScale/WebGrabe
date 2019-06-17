@@ -4,10 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
-import com.kostya.webscaleslibrary.FragmentWebTerminal;
 import com.kostya.webscaleslibrary.preferences.ActivityCalibration;
 
 import java.util.ArrayList;

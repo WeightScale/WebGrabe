@@ -35,7 +35,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/buttonSettings"
-                    android:src="@drawable/ic_settings_admin"
+                    android:src="@drawable/ic_settings_general"
                     android:layout_gravity="center"
                     android:clickable="true"
                     android:paddingRight="30dp"

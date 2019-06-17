@@ -55,7 +55,6 @@ import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.params.BasicHttpParams;
 import cz.msebera.android.httpclient.params.HttpConnectionParams;
 import cz.msebera.android.httpclient.params.HttpParams;
-import io.objectbox.query.Query;
 import io.objectbox.query.QueryBuilder;
 
 //import android.support.v7.app.NotificationCompat;
@@ -99,7 +98,7 @@ public class IntentServiceGoogleForm extends IntentService {
                 break;
                 default:{
                     Bundle bundle = intent.getExtras();
-                    String http = bundle.getString(EXTRA_HTTP_PATH);
+                    String http = Objects.requireNonNull(bundle).getString(EXTRA_HTTP_PATH);
                     List<ValuePair> results = bundle.getParcelableArrayList(EXTRA_LIST_VALUE_PAIR);
                     internet.getConnection(5000, 10);
                     submitData(http, results);
@@ -170,7 +169,7 @@ public class IntentServiceGoogleForm extends IntentService {
         //GoogleForms.Form form = new GoogleForms(getApplicationContext().getAssets().open(filePath)).createForm(nameForm);
         //InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(Uri.parse(path));
         //String FilePath = getApplicationContext().getFilesDir() + File.separator + "forms" + File.separator + "form.xml";
-        File file = new File(Globals.getInstance().pathLocalForms,"form.xml");
+        File file = new File(Globals.pathLocalForms,"form.xml");
         //Uri uri = Uri.parse(FilePath);
         InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(Uri.fromFile(file));
         //InputStream inputStream = new FileInputStream(path);
@@ -282,7 +281,7 @@ public class IntentServiceGoogleForm extends IntentService {
         }
 
         ValuePair(Parcel in) {
-            super(in.readString(), in.readString());
+            super(Objects.requireNonNull(in.readString()), in.readString());
         }
 
         public static final Creator<ValuePair> CREATOR = new Creator<ValuePair>() {
@@ -360,7 +359,7 @@ public class IntentServiceGoogleForm extends IntentService {
             return form;
         }
 
-        public static class Form{
+        static class Form{
             private String http = "";
             private String table = "";
             private Collection<BasicNameValuePair> entrys = new ArrayList<>();
@@ -418,7 +417,7 @@ public class IntentServiceGoogleForm extends IntentService {
 
         Notification notification = Build.VERSION.SDK_INT <= 15 ? builder.getNotification() : builder.build();
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, notification);
+        Objects.requireNonNull(notificationManager).notify(1, notification);
     }
 
     private void sendNotification(String Ticker, String Title, String Text) {
@@ -434,6 +433,6 @@ public class IntentServiceGoogleForm extends IntentService {
 
         Notification notification = Build.VERSION.SDK_INT <= 15 ? builder.getNotification() : builder.build();
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, notification);
+        Objects.requireNonNull(notificationManager).notify(1, notification);
     }
 }

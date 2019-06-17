@@ -39,7 +39,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
+import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -52,8 +52,8 @@ import java.text.DecimalFormat;
 public class FragmentWebTerminal extends FragmentView implements View.OnClickListener/*, View.OnLongClickListener*/ {
     static Context mContext;
     /** Настройки для весов. */
-    public Settings settings;
-    WebScalesClient webScalesClient;
+    private Settings settings;
+    private WebScalesClient webScalesClient;
     private final Handler handler = new Handler();
     //private Module scaleModuleWiFi;
     //private ModuleWiFi scaleModule;
@@ -71,7 +71,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
     private static final String ARG_SSID = FragmentWebTerminal.class.getSimpleName()+"SSID";
     private String version;
     private String ssid;
-    int battery;
+    private int battery;
     private double moduleWeight;
     private boolean touchWeightView;
     private boolean weightViewIsSwipe;
@@ -242,7 +242,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         fragment.show(getFragmentManager(), fragment.getClass().getName());*/
     }
 
-    public void openSearchProgress(String msg){
+    private void openSearchProgress(String msg){
         /*DialogFragment fragment = SearchProgressFragment.newInstance(msg);
         fragment.setTargetFragment(this, ScalesView.REQUEST_ATTACH);
         fragment.show(getFragmentManager(), fragment.getClass().getName());*/
@@ -346,7 +346,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
             dialog.setIndeterminate(false);
             dialog.show();
             dialog.setContentView(R.layout.zeroing_dialog);
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             TextView tv1 = dialog.findViewById(R.id.textView1);
             tv1.setText(R.string.Zeroing);
         }
@@ -367,7 +367,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
         private Rect bounds;
         private ProgressDialog dialogSearch;
         private final IntentFilter intentFilter;
-        protected boolean isRegistered;
+        boolean isRegistered;
 
         BaseReceiver(Context context){
             mContext = context;
@@ -486,7 +486,7 @@ public class FragmentWebTerminal extends FragmentView implements View.OnClickLis
             }
         }
 
-        public void register() {
+        void register() {
             isRegistered = true;
             mContext.registerReceiver(this, intentFilter);
         }

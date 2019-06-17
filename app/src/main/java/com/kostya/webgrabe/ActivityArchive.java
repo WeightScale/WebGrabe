@@ -2,8 +2,8 @@ package com.kostya.webgrabe;
 
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -18,7 +18,6 @@ import android.view.ViewGroup;
 import com.kostya.webgrabe.provider.Invoice;
 import com.kostya.webgrabe.provider.Invoice_;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -65,18 +64,16 @@ public class ActivityArchive extends AppCompatActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             counting = invoices.stream().collect(Collectors.groupingBy(Invoice::getDateCreate, Collectors.summingDouble(Invoice::getTotalWeight)));
         }else {
-            Iterator<Invoice> inv = invoices.iterator();
 
-            while (inv.hasNext()){
-                Invoice i = inv.next();
+            for (Invoice i : invoices) {
                 String date = i.getDateCreate();
                 double sum = i.getTotalWeight();
-                if(counting.containsKey(date)){
+                if (counting.containsKey(date)) {
                     double s = counting.get(date);
-                    sum +=s;
+                    sum += s;
                     //counting.remove(date);
                 }
-                counting.put(date,sum);
+                counting.put(date, sum);
             }
         }
         Map<String, Double> treeMap = new TreeMap<>(counting);
@@ -141,7 +138,7 @@ public class ActivityArchive extends AppCompatActivity {
         }
 
         void init(Context context, List<Invoice> list) {
-            mObjectMap = new HashMap<Object, Integer>();
+            mObjectMap = new HashMap<>();
             boolean cursorPresent = list != null;
             invoiceList = list;
             mDataValid = cursorPresent;
@@ -155,7 +152,7 @@ public class ActivityArchive extends AppCompatActivity {
         }*/
 
         @Override
-        public int getItemPosition(Object object) {
+        public int getItemPosition(@NonNull Object object) {
             Integer rowId = mObjectMap.get(object);
             if (rowId != null && mItemPositions != null) {
                 return mItemPositions.get(rowId, POSITION_NONE);
@@ -170,9 +167,7 @@ public class ActivityArchive extends AppCompatActivity {
                 int count = invoiceList.size();
                 mItemPositions = new SparseIntArray(count);
                 //mCursor.moveToPosition(-1);
-                Iterator<Invoice> invoiceIterator = invoiceList.iterator();
-                while (invoiceIterator.hasNext()){
-                    Invoice invoice =invoiceIterator.next();
+                for (Invoice invoice : invoiceList) {
                     long rowId = invoice.getId();
                     int cursorPos = 0;// = mCursor.getPosition();
                     mItemPositions.append((int) rowId, cursorPos);

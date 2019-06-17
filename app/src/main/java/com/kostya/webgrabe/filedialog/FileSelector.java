@@ -1,4 +1,4 @@
-package com.kostya.webgrabe;
+package com.kostya.webgrabe.filedialog;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -14,13 +14,14 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class FileSelector {
     private static final String PARENT_DIR = "..";
 
     private final Activity activity;
-    private ListView list;
-    private Dialog dialog;
+    private final ListView list;
+    private final Dialog dialog;
     private File currentPath;
 
     // filter on file extension
@@ -59,7 +60,7 @@ public class FileSelector {
             }
         });
         dialog.setContentView(list);
-        dialog.getWindow().setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+        Objects.requireNonNull(dialog.getWindow()).setLayout(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
         refresh(Environment.getExternalStorageDirectory());
         //refresh(Environment.getDataDirectory());
     }
@@ -112,8 +113,7 @@ public class FileSelector {
 
             // refresh the user interface
             dialog.setTitle(currentPath.getPath());
-            list.setAdapter(new ArrayAdapter(activity,
-                    android.R.layout.simple_list_item_1, fileList) {
+            list.setAdapter(new ArrayAdapter(activity,android.R.layout.simple_list_item_1, fileList) {
                 @Override public View getView(int pos, View view, ViewGroup parent) {
                     view = super.getView(pos, view, parent);
                     ((TextView) view).setSingleLine(true);

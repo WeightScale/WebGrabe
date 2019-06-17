@@ -151,9 +151,6 @@ public class ActivityMain extends AppCompatActivity implements NavigationView.On
             case R.id.preferences:
                 startActivity(new Intent(getApplicationContext(), ActivityPreferences.class));
             break;
-            case R.id.search:
-                //scalesView.openSearchScales();
-            break;
             case R.id.power_off:
                 finish();
             break;

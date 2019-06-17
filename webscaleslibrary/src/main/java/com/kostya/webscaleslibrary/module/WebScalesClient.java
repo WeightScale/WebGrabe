@@ -100,8 +100,7 @@ public class WebScalesClient extends Module implements Client.MessageListener, I
                         EventBus.getDefault().post(gson.fromJson(message,Commands.ClassSWT.class));
                         break;
                     case "wt":
-                        Commands.ClassWT wt = gson.fromJson(message, Commands.ClassWT.class);
-                        EventBus.getDefault().post(wt);
+                        EventBus.getDefault().post(gson.fromJson(message, Commands.ClassWT.class));
                         break;
                     case "ovl":
                         EventBus.getDefault().post(gson.fromJson(message,Commands.ClassOVL.class));

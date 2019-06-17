@@ -24,7 +24,7 @@ public abstract class Commands {
     public static final ClassWT WT = new ClassWT();
     static ClassSWT SWT;
     static ClassOVL OVL;
-    public static ClassTP TP = new ClassTP();
+    public static final ClassTP TP = new ClassTP();
     abstract void getParam();
 
     /** Класс команды получить данные вес заряд стабильный вес */

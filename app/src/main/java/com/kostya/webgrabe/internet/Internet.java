@@ -143,7 +143,7 @@ public class Internet {
 
                     TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
 
-                    Class<?> telephonyManagerClass = Class.forName(telephonyManager.getClass().getName());
+                    Class<?> telephonyManagerClass = Class.forName(Objects.requireNonNull(telephonyManager).getClass().getName());
                     Method getITelephonyMethod = telephonyManagerClass.getDeclaredMethod("getITelephony");
                     getITelephonyMethod.setAccessible(true);
                     Object ITelephonyStub = getITelephonyMethod.invoke(telephonyManager);
@@ -176,10 +176,8 @@ public class Internet {
                         //// TODO: 09.07.2016  
                     }
                 }
-                return;
             } catch (Exception ignored) {
                 Log.e("hhh", "error turning on/off data");
-                return;
             }
         //}
         //return false;

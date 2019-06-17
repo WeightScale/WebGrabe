@@ -65,6 +65,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 
 //import android.annotation.Widget;
@@ -490,7 +491,7 @@ public class NumberPicker extends LinearLayout {
     /**
      * Interface to listen for changes of the current value.
      */
-    public interface OnValueChangeListener {
+    interface OnValueChangeListener {
 
         /**
          * Called upon a change of the current value.
@@ -505,7 +506,7 @@ public class NumberPicker extends LinearLayout {
     /**
      * Interface to listen for the picker scroll state.
      */
-    public interface OnScrollListener {
+    interface OnScrollListener {
 
         /**
          * The view is not scrolling.
@@ -623,7 +624,7 @@ public class NumberPicker extends LinearLayout {
         setWillNotDraw(!mHasSelectorWheel);
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService( Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(layoutResId, this, true);
+        Objects.requireNonNull(inflater).inflate(layoutResId, this, true);
 
         OnClickListener onClickListener = new OnClickListener() {
             @Override
@@ -998,7 +999,7 @@ public class NumberPicker extends LinearLayout {
             return super.dispatchHoverEvent(event);
         }
 
-        if (((AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE)).isEnabled()) {
+        if (((AccessibilityManager) Objects.requireNonNull(getContext().getSystemService(Context.ACCESSIBILITY_SERVICE))).isEnabled()) {
             final int eventY = (int) event.getY();
             final int hoveredVirtualViewId;
             if (eventY < mTopSelectionDividerTop) {
@@ -1259,7 +1260,7 @@ public class NumberPicker extends LinearLayout {
      * @see #getMinValue()
      * @see #getMaxValue()
      */
-    public boolean getWrapSelectorWheel() {
+    private boolean getWrapSelectorWheel() {
         return mWrapSelectorWheel;
     }
 
@@ -1280,7 +1281,7 @@ public class NumberPicker extends LinearLayout {
      *
      * @param wrapSelectorWheel Whether to wrap.
      */
-    public void setWrapSelectorWheel(boolean wrapSelectorWheel) {
+    private void setWrapSelectorWheel(boolean wrapSelectorWheel) {
         final boolean wrappingAllowed = (mMaxValue - mMinValue) >= mSelectorIndices.length;
         if ((!wrapSelectorWheel || wrappingAllowed) && wrapSelectorWheel != mWrapSelectorWheel) {
             mWrapSelectorWheel = wrapSelectorWheel;
@@ -1306,7 +1307,7 @@ public class NumberPicker extends LinearLayout {
      *
      * @return The value.
      */
-    public int getValue() {
+    private int getValue() {
         return mValue;
     }
 
@@ -1315,7 +1316,7 @@ public class NumberPicker extends LinearLayout {
      *
      * @return The min value
      */
-    public int getMinValue() {
+    private int getMinValue() {
         return mMinValue;
     }
 
@@ -1353,7 +1354,7 @@ public class NumberPicker extends LinearLayout {
      *
      * @return The max value.
      */
-    public int getMaxValue() {
+    private int getMaxValue() {
         return mMaxValue;
     }
 
@@ -1821,7 +1822,7 @@ public class NumberPicker extends LinearLayout {
      *
      * @return Whether the text was updated.
      */
-    private boolean updateInputTextView() {
+    private void updateInputTextView() {
         /*
          * If we don't have displayed values then use the current number else
          * find the correct value in the displayed values for the current
@@ -1831,10 +1832,8 @@ public class NumberPicker extends LinearLayout {
                 : mDisplayedValues[mValue - mMinValue];
         if (!TextUtils.isEmpty(text) && !text.equals(mInputText.getText().toString())) {
             mInputText.setText(text);
-            return true;
         }
 
-        return false;
     }
 
     /**
@@ -2001,7 +2000,7 @@ public class NumberPicker extends LinearLayout {
                 String result = String.valueOf(dest.subSequence(0, dstart)) + filtered
                         + dest.subSequence(dend, dest.length());
 
-                if (result != null && result.isEmpty()) {
+                if (result.isEmpty()) {
                     return result;
                 }
                 int val = getSelectedPos(result);
@@ -2054,8 +2053,8 @@ public class NumberPicker extends LinearLayout {
     }
 
     class PressedStateHelper implements Runnable {
-        public static final int BUTTON_INCREMENT = 1;
-        public static final int BUTTON_DECREMENT = 2;
+        static final int BUTTON_INCREMENT = 1;
+        static final int BUTTON_DECREMENT = 2;
 
         private final int MODE_PRESS = 1;
         private final int MODE_TAPPED = 2;
@@ -2063,7 +2062,7 @@ public class NumberPicker extends LinearLayout {
         private int mManagedButton;
         private int mMode;
 
-        public void cancel() {
+        void cancel() {
             mMode = 0;
             mManagedButton = 0;
             removeCallbacks(this);
@@ -2077,14 +2076,14 @@ public class NumberPicker extends LinearLayout {
             }
         }
 
-        public void buttonPressDelayed(int button) {
+        void buttonPressDelayed(int button) {
             cancel();
             mMode = MODE_PRESS;
             mManagedButton = button;
             postDelayed(this, ViewConfiguration.getTapTimeout());
         }
 
-        public void buttonTapped(int button) {
+        void buttonTapped(int button) {
             cancel();
             mMode = MODE_TAPPED;
             mManagedButton = button;
@@ -2204,12 +2203,12 @@ public class NumberPicker extends LinearLayout {
             }
         }
 
-        public boolean performAction(int virtualViewId, int action, Bundle arguments) {
+        boolean performAction(int virtualViewId, int action, Bundle arguments) {
             return mProvider != null && mProvider.performAction(virtualViewId, action, arguments);
 
         }
 
-        public void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType) {
+        void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType) {
             if (mProvider != null) mProvider.sendAccessibilityEventForVirtualView(virtualViewId, eventType);
         }
     }
@@ -2420,7 +2419,7 @@ public class NumberPicker extends LinearLayout {
             return super.performAction(virtualViewId, action, arguments);
         }
 
-        public void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType) {
+        void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType) {
             switch (virtualViewId) {
                 case VIRTUAL_VIEW_ID_DECREMENT:
                     if (hasVirtualDecrementButton()) {
@@ -2442,7 +2441,7 @@ public class NumberPicker extends LinearLayout {
         }
 
         private void sendAccessibilityEventForVirtualText(int eventType) {
-            if (((AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE)).isEnabled()) {
+            if (((AccessibilityManager) Objects.requireNonNull(getContext().getSystemService(Context.ACCESSIBILITY_SERVICE))).isEnabled()) {
                 AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
                 mInputText.onInitializeAccessibilityEvent(event);
                 mInputText.onPopulateAccessibilityEvent(event);
@@ -2452,7 +2451,7 @@ public class NumberPicker extends LinearLayout {
         }
 
         private void sendAccessibilityEventForVirtualButton(int virtualViewId, int eventType, String text) {
-            if (((AccessibilityManager) getContext().getSystemService(Context.ACCESSIBILITY_SERVICE)).isEnabled()) {
+            if (((AccessibilityManager) Objects.requireNonNull(getContext().getSystemService(Context.ACCESSIBILITY_SERVICE))).isEnabled()) {
                 AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
                 event.setClassName(Button.class.getName());
                 event.setPackageName(getContext().getPackageName());

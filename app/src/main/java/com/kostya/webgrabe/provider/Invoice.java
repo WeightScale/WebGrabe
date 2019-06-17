@@ -1,7 +1,6 @@
 package com.kostya.webgrabe.provider;
 
 import java.util.Date;
-import java.util.Map;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
